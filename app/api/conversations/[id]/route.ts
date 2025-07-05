@@ -3,14 +3,12 @@ import dbConnect from "../../../../lib/mongodb";
 import Conversation from "../../../../models/Conversation";
 import Message from "../../../../models/Message";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     await dbConnect();
 
-    const conversationId = params.id;
+    const url = new URL(request.url);
+    const conversationId = url.pathname.split("/").pop();
 
     if (!conversationId) {
       return NextResponse.json(

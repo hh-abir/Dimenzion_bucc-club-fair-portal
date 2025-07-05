@@ -6,13 +6,17 @@ const ConversationSchema = new mongoose.Schema(
       {
         name: String,
         type: { type: String, enum: ["user", "admin"] },
-        club: { type: String, enum: ["BUCC", "BURC", "BUAC"] },
+        club: { type: String },
       },
     ],
     club: {
       type: String,
       required: true,
-      enum: ["BUCC", "BURC", "BUAC"],
+    },
+    fingerprint: {
+      type: String,
+      required: true,
+      index: true,
     },
     lastMessage: {
       content: String,

@@ -20,6 +20,53 @@ export default function AdminDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
+  const [showBlockModal, setShowBlockModal] = useState<string | null>(null);
+  const [blockDuration, setBlockDuration] = useState(30);
+  const [isBlocking, setIsBlocking] = useState(false);
+
+  const blockDevice = async (fingerprint: string) => {
+    try {
+      setIsBlocking(true);
+      const response = await fetch("/api/blocked-devices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fingerprint,
+          club: session?.user?.club,
+          duration: blockDuration,
+        }),
+      });
+
+      if (response.ok) {
+        // Emit socket event to immediately block the user
+        if (socket) {
+          socket.emit("block-device", {
+            fingerprint,
+            timeRemaining: blockDuration * 60,
+          });
+          alert(
+            `Device blocked successfully. User will be disconnected and blocked for ${blockDuration} minutes.`
+          );
+        }
+
+        setShowBlockModal(null);
+        // Refresh conversations to update the UI
+        loadConversations();
+
+        // If the blocked conversation is currently selected, deselect it
+        if (selectedConversation?.fingerprint === fingerprint) {
+          setSelectedConversation(null);
+          setMessages([]);
+        }
+      } else {
+        console.error("Failed to block device - server error");
+      }
+    } catch (error) {
+      console.error("Failed to block device:", error);
+    } finally {
+      setIsBlocking(false);
+    }
+  };
 
   const loadConversations = useCallback(async () => {
     if (session?.user?.club) {
@@ -40,28 +87,28 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!session?.user?.club) return;
 
-    const socketInstance = io({ transports: ["websocket"] }); // Force websocket
+    const socketInstance = io({ transports: ["websocket"] });
     setSocket(socketInstance);
 
     socketInstance.emit("user-join", {
-      userName: `${session.user.club} Admin`,
-      club: session.user.club,
+      userName: `${session!.user!.club} Admin`,
+      club: session!.user!.club,
       userType: "admin",
     });
 
-    // Listen for new conversations
     socketInstance.on("new-conversation", (conversation) => {
       console.log("New conversation received:", conversation);
       setConversations((prev) => [conversation, ...prev]);
       loadConversations();
     });
 
-    // Listen for incoming messages
     socketInstance.on("receive-private-message", (message: Message) => {
       console.log("Admin received message:", message);
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        const currentMessages = Array.isArray(prev) ? prev : [];
+        return [...currentMessages, message];
+      });
 
-      // Update last message in conversation list
       setConversations((prev) =>
         prev.map((conv) =>
           conv._id === message.conversationId
@@ -77,15 +124,12 @@ export default function AdminDashboard() {
       );
     });
 
-    // Initial fetch
     loadConversations();
 
-    // Fallback polling every 2 seconds
     const interval = setInterval(() => {
       loadConversations();
-    }, 2000);
+    }, 5000); // Reduced frequency to 5 seconds
 
-    // Cleanup
     return () => {
       socketInstance.disconnect();
       clearInterval(interval);
@@ -107,7 +151,7 @@ export default function AdminDashboard() {
       } catch (error) {
         console.error("Failed to refresh messages:", error);
       }
-    }, 2000);
+    }, 3000); // Reduced frequency to 3 seconds
 
     return () => clearInterval(interval);
   }, [selectedConversation]);
@@ -115,6 +159,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
 
@@ -166,7 +211,7 @@ export default function AdminDashboard() {
       content: newMessage,
       senderName: `${session.user.club} Admin`,
       senderType: "admin",
-      club: session.user.club,
+      club: session.user.club!,
       conversationId: selectedConversation._id,
       timestamp: new Date(),
     };
@@ -178,7 +223,11 @@ export default function AdminDashboard() {
         body: JSON.stringify(messageData),
       });
 
-      setMessages((prev) => [...prev, messageData]);
+      setMessages((prev) => {
+        const currentMessages = Array.isArray(prev) ? prev : [];
+        return [...currentMessages, messageData];
+      });
+
       socket.emit("send-private-message", messageData);
       setNewMessage("");
     } catch (error) {
@@ -194,17 +243,14 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        // Remove from local state
         setConversations((prev) =>
           prev.filter((conv) => conv._id !== conversationId)
         );
 
-        // If this was the selected conversation, clear it
         if (selectedConversation?._id === conversationId) {
           setSelectedConversation(null);
           setMessages([]);
 
-          // Leave the socket room
           if (socket) {
             socket.emit("admin-leave-conversation", { conversationId });
           }
@@ -295,7 +341,7 @@ export default function AdminDashboard() {
                         {user?.name || "Unknown User"}
                       </div>
                       {conversation.lastMessage && (
-                        <div className="text-sm text-gray-600 truncate pr-8">
+                        <div className="text-sm text-gray-600 truncate pr-16">
                           {conversation.lastMessage.content}
                         </div>
                       )}
@@ -304,29 +350,58 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Delete button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowDeleteConfirm(conversation._id);
-                      }}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                      title="Delete conversation"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    {/* Action buttons */}
+                    <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Block button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowBlockModal(
+                            conversation.fingerprint || conversation._id
+                          );
+                        }}
+                        className="bg-orange-500 text-white p-1 rounded hover:bg-orange-600"
+                        title="Block device"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteConfirm(conversation._id);
+                        }}
+                        className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                        title="Delete conversation"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -355,25 +430,53 @@ export default function AdminDashboard() {
                       )?.name || "Unknown User"
                     : "Unknown User"}
                 </h2>
-                <button
-                  onClick={() => setShowDeleteConfirm(selectedConversation._id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors flex items-center space-x-1"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() =>
+                      setShowBlockModal(
+                        selectedConversation.fingerprint ||
+                          selectedConversation._id
+                      )
+                    }
+                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors flex items-center space-x-1"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  <span>Delete</span>
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
+                      />
+                    </svg>
+                    <span>Block</span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      setShowDeleteConfirm(selectedConversation._id)
+                    }
+                    className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors flex items-center space-x-1"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -427,6 +530,75 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Block Device Modal */}
+      {showBlockModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Block Device</h3>
+            <p className="text-gray-600 mb-4">
+              Block this device from accessing the chat system. The user will be
+              immediately disconnected.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Block Duration (minutes)
+              </label>
+              <input
+                type="number"
+                value={blockDuration}
+                onChange={(e) =>
+                  setBlockDuration(parseInt(e.target.value) || 30)
+                }
+                min="1"
+                max="1440"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="30"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Maximum: 1440 minutes (24 hours)
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowBlockModal(null)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={isBlocking}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => blockDevice(showBlockModal)}
+                disabled={isBlocking}
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50 flex items-center space-x-2"
+              >
+                {isBlocking && (
+                  <svg
+                    className="animate-spin h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                )}
+                <span>{isBlocking ? "Blocking..." : "Block Device"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

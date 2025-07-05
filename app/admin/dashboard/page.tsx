@@ -7,6 +7,7 @@ import AdminDashboard from "../../../components/AdminDashboard";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+
   const router = useRouter();
 
   useEffect(() => {

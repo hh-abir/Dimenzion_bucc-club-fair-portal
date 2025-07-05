@@ -4,7 +4,7 @@ import { useState } from "react";
 import ChatModal from "./ChatModal";
 
 interface ClubCardProps {
-  club: "BUCC" | "BURC" | "BUAC";
+  club: "string";
   name: string;
   description: string;
 }
@@ -18,7 +18,6 @@ export default function ClubCard({ club, name, description }: ClubCardProps) {
         <h2 className="text-2xl font-bold mb-2">{name}</h2>
         <p className="text-gray-600 mb-4">{description}</p>
 
-        {/* Regular button for desktop */}
         <button
           onClick={() => setIsChatOpen(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2 mb-4"
@@ -26,7 +25,6 @@ export default function ClubCard({ club, name, description }: ClubCardProps) {
           💬 Chat with {club}
         </button>
 
-        {/* Floating chat button */}
         <button
           onClick={() => setIsChatOpen(true)}
           className="absolute bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110"

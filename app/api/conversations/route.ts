@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "../../../lib/mongodb";
 import Conversation from "../../../models/Conversation";
+import DeviceBlock from "../../../models/DeviceBlock";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +22,13 @@ export async function GET(request: NextRequest) {
       isActive: true,
     }).sort({ updatedAt: -1 });
 
-    return NextResponse.json(conversations);
+    // Ensure all conversations have participants array to prevent runtime errors
+    const safeConversations = conversations.map((conv) => ({
+      ...conv.toObject(),
+      participants: conv.participants || [],
+    }));
+
+    return NextResponse.json(safeConversations);
   } catch (error) {
     console.error("Error fetching conversations:", error);
     return NextResponse.json(
@@ -35,23 +42,61 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const { userName, club } = await request.json();
+    const { userName, club, fingerprint } = await request.json();
 
+    // Validate required fields
+    if (!userName || !club || !fingerprint) {
+      return NextResponse.json(
+        { error: "userName, club, and fingerprint are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if device is blocked
+    const block = await DeviceBlock.findOne({
+      fingerprint,
+      club,
+      blockedUntil: { $gt: new Date() },
+    });
+
+    if (block) {
+      const timeRemaining = Math.ceil(
+        (block.blockedUntil.getTime() - Date.now()) / 1000
+      );
+      return NextResponse.json({
+        blocked: true,
+        timeRemaining,
+        reason: block.reason,
+      });
+    }
+
+    // Look for existing conversation by fingerprint (more reliable than name)
     let conversation = await Conversation.findOne({
-      "participants.name": userName,
+      fingerprint,
       club,
       isActive: true,
     });
 
     if (!conversation) {
+      // Create new conversation
       conversation = new Conversation({
         participants: [
           { name: userName, type: "user" },
           { name: `${club} Admin`, type: "admin", club },
         ],
         club,
+        fingerprint,
       });
       await conversation.save();
+    } else {
+      // Update the user name in existing conversation if it changed
+      const userParticipant = conversation.participants.find(
+        (p: { type: string }) => p.type === "user"
+      );
+      if (userParticipant && userParticipant.name !== userName) {
+        userParticipant.name = userName;
+        await conversation.save();
+      }
     }
 
     return NextResponse.json(conversation);

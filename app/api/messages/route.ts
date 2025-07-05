@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "../../../lib/mongodb";
 import Message from "../../../models/Message";
 import Conversation from "../../../models/Conversation";
+import DeviceBlock from "@/models/DeviceBlock";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,8 +30,37 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const { content, senderName, senderType, club, conversationId } =
-      await request.json();
+    const {
+      content,
+      senderName,
+      senderType,
+      club,
+      conversationId,
+      fingerprint,
+    } = await request.json();
+
+    // Check if device is blocked before allowing message
+    if (fingerprint && senderType === "user") {
+      const block = await DeviceBlock.findOne({
+        fingerprint,
+        club,
+        blockedUntil: { $gt: new Date() },
+      });
+
+      if (block) {
+        const timeRemaining = Math.ceil(
+          (block.blockedUntil.getTime() - Date.now()) / 1000
+        );
+        return NextResponse.json(
+          {
+            blocked: true,
+            timeRemaining,
+            reason: block.reason,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const message = new Message({
       content,

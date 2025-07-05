@@ -5,7 +5,7 @@ import { Server } from "socket.io";
 
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = process.env.HOSTNAME || '0.0.0.0';
+const hostname = process.env.HOSTNAME || 'localhost';
 const port = process.env.PORT || 3000;
 
 const app = next({ dev, hostname, port });
@@ -65,12 +65,26 @@ app.prepare().then(() => {
       }
     });
 
+    
+
     // Send private message
     socket.on('send-private-message', (data) => {
       console.log('Broadcasting message to conversation:', data.conversationId);
       // Broadcast to everyone in the conversation room EXCEPT the sender
       socket.to(data.conversationId).emit('receive-private-message', data);
     });
+
+    socket.on('notify-user-blocked', ({ fingerprint, reason }) => {
+  // Find and notify user they've been blocked
+  for (const [socketId, userInfo] of activeConnections.entries()) {
+    if (userInfo.fingerprint === fingerprint && userInfo.userType === 'user') {
+      const targetSocket = io.sockets.sockets.get(socketId);
+      if (targetSocket) {
+        targetSocket.emit('user-blocked-notification', { reason });
+      }
+    }
+  }
+});
 
     // Admin joins specific conversation
     socket.on('admin-join-conversation', ({ conversationId, adminName }) => {

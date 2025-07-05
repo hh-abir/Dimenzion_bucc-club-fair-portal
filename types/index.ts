@@ -11,7 +11,7 @@ export interface Message {
 export interface User {
   _id?: string;
   email: string;
-  club: "BUCC" | "BURC" | "BUAC";
+  club: string;
   role: string;
 }
 
@@ -20,9 +20,10 @@ export interface Conversation {
   participants: Array<{
     name: string;
     type: "user" | "admin";
-    club?: "BUCC" | "BURC" | "BUAC";
+    club?: string;
   }>;
-  club: "BUCC" | "BURC" | "BUAC";
+  club: string;
+  fingerprint: string; // Added the missing fingerprint property
   lastMessage?: {
     content: string;
     timestamp: Date;
@@ -34,5 +35,5 @@ export interface Conversation {
 
 export interface ChatSession {
   userName: string;
-  club: "BUCC" | "BURC" | "BUAC";
+  club: string;
 }

@@ -1,14 +1,38 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { Message } from "../types";
 
-interface ChatModalProps {
-  club: "BUCC" | "BURC" | "BUAC";
+export interface ChatModalProps {
+  club: "string";
   isOpen: boolean;
   onClose: () => void;
 }
+const generateBrowserFingerprint = (): string => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.textBaseline = "top";
+    ctx.font = "14px Arial";
+    ctx.fillText("Browser fingerprint", 2, 2);
+  }
+
+  const fingerprint = {
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    screenResolution: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    canvas: canvas.toDataURL(),
+    cookieEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack,
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    maxTouchPoints: navigator.maxTouchPoints,
+  };
+
+  return btoa(JSON.stringify(fingerprint)).slice(0, 32);
+};
 
 export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -19,11 +43,60 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   const [isJoined, setIsJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockTimeRemaining, setBlockTimeRemaining] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const savedUserName = localStorage.getItem(`chatUserName_${club}`);
+    if (savedUserName) {
+      setUserName(savedUserName);
+    }
+  }, [club]);
 
-  // Initialize socket connection and event listeners
+  // Check if device is blocked
+  const checkDeviceStatus = useCallback(async () => {
+    const fingerprint = generateBrowserFingerprint();
+    try {
+      const response = await fetch("/api/device-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fingerprint, club }),
+      });
+
+      const data = await response.json();
+      if (data.blocked) {
+        setIsBlocked(true);
+        setBlockTimeRemaining(data.timeRemaining);
+      }
+    } catch (error) {
+      console.error("Failed to check device status:", error);
+    }
+  }, [club]);
   useEffect(() => {
     if (isOpen) {
+      checkDeviceStatus();
+    }
+  }, [checkDeviceStatus, isOpen]);
+
+  // Block timer countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isBlocked && blockTimeRemaining > 0) {
+      interval = setInterval(() => {
+        setBlockTimeRemaining((prev) => {
+          if (prev <= 1) {
+            setIsBlocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isBlocked, blockTimeRemaining]);
+
+  useEffect(() => {
+    if (isOpen && !isBlocked) {
       console.log("Initializing socket connection...");
       const socketInstance = io();
       setSocket(socketInstance);
@@ -47,13 +120,18 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
           return [...currentMessages];
         });
       });
+      socketInstance.on("device-blocked", ({ timeRemaining }) => {
+        setIsBlocked(true);
+        setBlockTimeRemaining(timeRemaining);
+        socketInstance.disconnect();
+      });
 
       return () => {
         console.log("Disconnecting socket...");
         socketInstance.disconnect();
       };
     }
-  }, [isOpen, club]);
+  }, [isOpen, club, isBlocked]);
   useEffect(() => {
     if (!isJoined || !conversationId) return;
 
@@ -65,7 +143,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          // Only update if there's a real change
           if (data.length !== messages.length) {
             setMessages(data);
           }
@@ -108,17 +185,25 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   };
 
   const startConversation = async () => {
-    if (userName.trim() && socket) {
+    if (userName.trim() && socket && !isBlocked) {
       try {
         setIsLoading(true);
+        // Save user name to localStorage
+        localStorage.setItem(`chatUserName_${club}`, userName);
+        const fingerprint = generateBrowserFingerprint();
 
         const response = await fetch("/api/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userName, club }),
+          body: JSON.stringify({ userName, club, fingerprint }),
         });
 
         const conversation = await response.json();
+        if (conversation.blocked) {
+          setIsBlocked(true);
+          setBlockTimeRemaining(conversation.timeRemaining);
+          return;
+        }
         setConversationId(conversation._id);
 
         socket.emit("user-join", { userName, club, userType: "user" });
@@ -139,13 +224,22 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   };
 
   const sendMessage = async () => {
-    if (newMessage.trim() && socket && userName && conversationId) {
+    if (
+      newMessage.trim() &&
+      socket &&
+      userName &&
+      conversationId &&
+      !isBlocked
+    ) {
+      const fingerprint = generateBrowserFingerprint();
+
       const messageData = {
         content: newMessage,
         senderName: userName,
         senderType: "user" as const,
         club,
         conversationId,
+        fingerprint, // Include fingerprint for blocking check
         timestamp: new Date(),
       };
 
@@ -155,6 +249,33 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(messageData),
         });
+
+        const result = await response.json();
+
+        if (result.blocked) {
+          setIsBlocked(true);
+          setBlockTimeRemaining(result.timeRemaining);
+
+          setMessages((prev) => {
+            const currentMessages = Array.isArray(prev) ? prev : [];
+            return [
+              ...currentMessages,
+              {
+                content: `You have been blocked: ${result.reason}`,
+                senderName: "System",
+                senderType: "admin" as const,
+                club,
+                timestamp: new Date(),
+                conversationId: conversationId,
+              },
+            ];
+          });
+
+          if (socket) {
+            socket.disconnect();
+          }
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to save message to database");
@@ -169,21 +290,72 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         setNewMessage("");
       } catch (error) {
         console.error("Failed to send message:", error);
+
+        setMessages((prev) => {
+          const currentMessages = Array.isArray(prev) ? prev : [];
+          return [
+            ...currentMessages,
+            {
+              content: "Failed to send message. Please try again.",
+              senderName: "System",
+              senderType: "admin" as const,
+              club,
+              timestamp: new Date(),
+              conversationId: conversationId,
+            },
+          ];
+        });
       }
     }
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   if (!isOpen) return null;
+
+  if (isBlocked) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 w-80 h-64">
+        <div className="bg-red-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shadow-lg">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+            <span className="font-semibold text-sm">Device Blocked</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-gray-200 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="bg-white rounded-b-lg shadow-lg border border-gray-200 p-6 text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Access Blocked
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Your device has been temporarily blocked from accessing this chat.
+          </p>
+          <div className="text-2xl font-bold text-red-600">
+            {formatTime(blockTimeRemaining)}
+          </div>
+          <p className="text-sm text-gray-500 mt-2">Time remaining</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* Chat Widget Container */}
       <div
         className={`fixed bottom-4 right-4 z-50 transition-all duration-300 ${
           isMinimized ? "w-80 h-16" : "w-80 h-96"
         }`}
       >
-        {/* Chat Header */}
         <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center shadow-lg">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-green-400 rounded-full"></div>
@@ -207,7 +379,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
           </div>
         </div>
 
-        {/* Chat Body */}
         {!isMinimized && (
           <div className="bg-white rounded-b-lg shadow-lg border border-gray-200 flex flex-col h-80">
             {!isJoined ? (
@@ -215,7 +386,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                 <div className="w-full">
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-800">
-                      Start Chat
+                      {userName ? "Welcome Back!" : "Start Chat"}
                     </h3>
                     <p className="text-sm text-gray-600">
                       We&apos;re here to help!
@@ -237,13 +408,16 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                     disabled={isLoading || !userName.trim()}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                   >
-                    {isLoading ? "Starting..." : "Start Chat"}
+                    {isLoading
+                      ? "Starting..."
+                      : userName
+                      ? "Continue Chat"
+                      : "Start Chat"}
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
                   {isLoading ? (
                     <div className="text-center text-gray-500 py-4">
@@ -299,14 +473,13 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                     <div className="text-center text-gray-500 py-4">
                       <div className="text-2xl mb-2">👋</div>
                       <div className="text-sm">
-                        Welcome! How can we help you today?
+                        Welcome back, {userName}! How can we help you today?
                       </div>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Message Input */}
                 <div className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
                   <div className="flex space-x-2">
                     <input
@@ -344,7 +517,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         )}
       </div>
 
-      {/* Backdrop for mobile */}
       <div
         className="fixed inset-0 bg-black bg-opacity-20 z-40 md:hidden"
         onClick={onClose}

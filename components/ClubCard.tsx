@@ -4,7 +4,7 @@ import { useState } from "react";
 import ChatModal from "./ChatModal";
 
 interface ClubCardProps {
-  club: "string";
+  club: string;
   name: string;
   description: string;
 }

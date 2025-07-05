@@ -1,7 +1,5 @@
 import { DefaultUser } from "next-auth";
 
-// Extend the Session, User, and JWT types to include custom fields
-
 declare module "next-auth" {
   interface Session {
     user?: {

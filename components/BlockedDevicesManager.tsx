@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-
+import { useCallback } from "react";
 interface BlockedDevice {
   _id: string;
   fingerprint: string;
@@ -19,7 +19,7 @@ export default function BlockedDevicesManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUnblocking, setIsUnblocking] = useState<string | null>(null);
 
-  const loadBlockedDevices = async () => {
+  const loadBlockedDevices = useCallback(async () => {
     if (!session?.user?.club) return;
 
     try {
@@ -37,7 +37,7 @@ export default function BlockedDevicesManager() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
 
   const unblockDevice = async (fingerprint: string) => {
     try {
@@ -52,7 +52,6 @@ export default function BlockedDevicesManager() {
       });
 
       if (response.ok) {
-        // Remove from local state
         setBlockedDevices((prev) =>
           prev.filter((device) => device.fingerprint !== fingerprint)
         );
@@ -84,10 +83,9 @@ export default function BlockedDevicesManager() {
   useEffect(() => {
     loadBlockedDevices();
 
-    // Refresh every 30 seconds
     const interval = setInterval(loadBlockedDevices, 30000);
     return () => clearInterval(interval);
-  }, [session]);
+  }, [loadBlockedDevices, session]);
 
   if (!session) {
     return <div>Please log in to access blocked devices.</div>;

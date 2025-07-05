@@ -26,7 +26,7 @@ const MessageSchema = new mongoose.Schema(
     },
     userId: {
       type: String,
-      index: true, // Add index for better performance
+      index: true,
     },
     timestamp: {
       type: Date,

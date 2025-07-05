@@ -35,7 +35,6 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // User joins with their info
     socket.on('user-join', ({ userName, club, userType }) => {
       const userInfo = { userName, club, userType, socketId: socket.id };
       activeConnections.set(socket.id, userInfo);
@@ -46,12 +45,10 @@ app.prepare().then(() => {
       }
     });
 
-    // User joins specific conversation room
     socket.on('join-conversation', ({ conversationId, userName, userType }) => {
       socket.join(conversationId);
       console.log(`${userType} ${userName} joined conversation ${conversationId}`);
       
-      // If it's a user joining, notify admins
       if (userType === 'user') {
         const userInfo = activeConnections.get(socket.id);
         if (userInfo) {
@@ -67,15 +64,12 @@ app.prepare().then(() => {
 
     
 
-    // Send private message
     socket.on('send-private-message', (data) => {
       console.log('Broadcasting message to conversation:', data.conversationId);
-      // Broadcast to everyone in the conversation room EXCEPT the sender
       socket.to(data.conversationId).emit('receive-private-message', data);
     });
 
     socket.on('notify-user-blocked', ({ fingerprint, reason }) => {
-  // Find and notify user they've been blocked
   for (const [socketId, userInfo] of activeConnections.entries()) {
     if (userInfo.fingerprint === fingerprint && userInfo.userType === 'user') {
       const targetSocket = io.sockets.sockets.get(socketId);
@@ -86,16 +80,13 @@ app.prepare().then(() => {
   }
 });
 
-    // Admin joins specific conversation
     socket.on('admin-join-conversation', ({ conversationId, adminName }) => {
       socket.join(conversationId);
       console.log(`Admin ${adminName} joined conversation ${conversationId}`);
       
-      // Notify user that admin joined
       socket.to(conversationId).emit('admin-joined', { adminName });
     });
 
-    // Admin leaves conversation
     socket.on('admin-leave-conversation', ({ conversationId }) => {
       socket.leave(conversationId);
       console.log(`Admin left conversation ${conversationId}`);
@@ -113,6 +104,6 @@ app.prepare().then(() => {
       process.exit(1);
     })
     .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
+      console.log(`> Ready on http:${hostname}:${port}`);
     });
 });

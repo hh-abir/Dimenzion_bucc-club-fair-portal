@@ -3,17 +3,17 @@ import ClubCard from "../components/ClubCard";
 export default function Home() {
   const clubs = [
     {
-      club: "BUCC" as const,
+      club: "BUCC",
       name: "BRAC University Computer Club",
       description: "Join our programming and tech community!",
     },
     {
-      club: "BURC" as const,
+      club: "BURC",
       name: "BRAC University Robotics Club",
       description: "Explore the world of robotics and automation!",
     },
     {
-      club: "BUAC" as const,
+      club: "BUAC",
       name: "BRAC University Adventure Club",
       description: "Adventure awaits! Join our outdoor activities!",
     },

@@ -38,7 +38,6 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        // Emit socket event to immediately block the user
         if (socket) {
           socket.emit("block-device", {
             fingerprint,
@@ -50,10 +49,8 @@ export default function AdminDashboard() {
         }
 
         setShowBlockModal(null);
-        // Refresh conversations to update the UI
         loadConversations();
 
-        // If the blocked conversation is currently selected, deselect it
         if (selectedConversation?.fingerprint === fingerprint) {
           setSelectedConversation(null);
           setMessages([]);
@@ -128,7 +125,7 @@ export default function AdminDashboard() {
 
     const interval = setInterval(() => {
       loadConversations();
-    }, 5000); // Reduced frequency to 5 seconds
+    }, 5000);
 
     return () => {
       socketInstance.disconnect();
@@ -151,7 +148,7 @@ export default function AdminDashboard() {
       } catch (error) {
         console.error("Failed to refresh messages:", error);
       }
-    }, 3000); // Reduced frequency to 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [selectedConversation]);

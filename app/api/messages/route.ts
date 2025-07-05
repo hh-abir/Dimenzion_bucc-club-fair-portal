@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       fingerprint,
     } = await request.json();
 
-    // Check if device is blocked before allowing message
     if (fingerprint && senderType === "user") {
       const block = await DeviceBlock.findOne({
         fingerprint,

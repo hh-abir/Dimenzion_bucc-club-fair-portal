@@ -7,7 +7,7 @@ const ConversationSchema = new mongoose.Schema(
         name: String,
         type: { type: String, enum: ["user", "admin"] },
         club: { type: String },
-        userId: String, // Add userId to participants
+        userId: String,
       },
     ],
     club: {
@@ -22,7 +22,7 @@ const ConversationSchema = new mongoose.Schema(
     userId: {
       type: String,
       required: true,
-      index: true, // Add index for better performance
+      index: true,
     },
     lastMessage: {
       content: String,

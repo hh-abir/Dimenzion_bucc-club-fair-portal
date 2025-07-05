@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Remove the block by setting blockedUntil to past date
     await DeviceBlock.findOneAndUpdate(
       { fingerprint, club },
       { blockedUntil: new Date(Date.now() - 1000) },

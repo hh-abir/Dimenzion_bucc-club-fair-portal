@@ -39,7 +39,6 @@ async function dbConnect(): Promise<void> {
   }
 }
 
-// Ensure graceful shutdown
 process.on("SIGINT", async () => {
   await mongoose.disconnect();
   console.log("Mongoose connection disconnected due to app termination");

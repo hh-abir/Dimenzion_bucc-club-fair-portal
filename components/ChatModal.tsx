@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-import { v4 as uuidv4 } from "uuid"; // Import from uuid package
+import { v4 as uuidv4 } from "uuid";
 
 import { Message } from "../types";
 
 export interface ChatModalProps {
-  club: "string";
+  club: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -37,7 +37,6 @@ const generateBrowserFingerprint = (): string => {
   return btoa(JSON.stringify(fingerprint)).slice(0, 32);
 };
 
-// Generate or retrieve user ID
 const generateOrGetUserId = (club: string): string => {
   const storageKey = `chatUserId_${club}`;
   let userId = localStorage.getItem(storageKey);
@@ -74,7 +73,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     setUserId(userIdFromStorage);
   }, [club]);
 
-  // Check if device is blocked
   const checkDeviceStatus = useCallback(async () => {
     const fingerprint = generateBrowserFingerprint();
     try {
@@ -99,7 +97,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     }
   }, [checkDeviceStatus, isOpen]);
 
-  // Block timer countdown
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isBlocked && blockTimeRemaining > 0) {
@@ -216,7 +213,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     if (userName.trim() && socket && !isBlocked && userId) {
       try {
         setIsLoading(true);
-        // Save user name to localStorage
         localStorage.setItem(`chatUserName_${club}`, userName);
         const fingerprint = generateBrowserFingerprint();
 

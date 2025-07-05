@@ -5,7 +5,7 @@ export interface Message {
   senderType: "user" | "admin";
   club: string;
   conversationId: string;
-  userId?: string; // Add userId field
+  userId?: string;
   timestamp: Date;
 }
 
@@ -22,11 +22,11 @@ export interface Conversation {
     name: string;
     type: "user" | "admin";
     club?: string;
-    userId?: string; // Add userId for participants
+    userId?: string;
   }>;
   club: string;
   fingerprint: string;
-  userId: string; // Add userId to conversation
+  userId: string;
   lastMessage?: {
     content: string;
     timestamp: Date;
@@ -38,6 +38,6 @@ export interface Conversation {
 
 export interface ChatSession {
   userName: string;
-  userId: string; // Add userId
+  userId: string;
   club: string;
 }

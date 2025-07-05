@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
       isActive: true,
     }).sort({ updatedAt: -1 });
 
-    // Ensure all conversations have participants array to prevent runtime errors
     const safeConversations = conversations.map((conv) => ({
       ...conv.toObject(),
       participants: conv.participants || [],
@@ -44,7 +43,6 @@ export async function POST(request: NextRequest) {
 
     const { userName, club, fingerprint, userId } = await request.json();
 
-    // Validate required fields
     if (!userName || !club || !fingerprint || !userId) {
       return NextResponse.json(
         { error: "userName, club, fingerprint, and userId are required" },
@@ -52,7 +50,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if device is blocked
     const block = await DeviceBlock.findOne({
       fingerprint,
       club,
@@ -70,7 +67,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Look for existing conversation by userId (more reliable than fingerprint)
     let conversation = await Conversation.findOne({
       userId,
       club,
@@ -78,7 +74,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (!conversation) {
-      // Create new conversation
       conversation = new Conversation({
         participants: [
           { name: userName, type: "user", userId },
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest) {
       });
       await conversation.save();
     } else {
-      // Update the user name in existing conversation if it changed
       const userParticipant = conversation.participants.find(
         (p: { type: string }) => p.type === "user"
       );

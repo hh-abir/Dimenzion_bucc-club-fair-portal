@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all active blocks for the club
     const blockedDevices = await DeviceBlock.find({
       club,
       blockedUntil: { $gt: new Date() },

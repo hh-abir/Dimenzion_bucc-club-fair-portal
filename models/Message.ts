@@ -1,0 +1,39 @@
+import mongoose from "mongoose";
+
+const MessageSchema = new mongoose.Schema(
+  {
+    content: {
+      type: String,
+      required: true,
+    },
+    senderName: {
+      type: String,
+      required: true,
+    },
+    senderType: {
+      type: String,
+      required: true,
+      enum: ["user", "admin"],
+    },
+    club: {
+      type: String,
+      required: true,
+      enum: ["BUCC", "BURC", "BUAC"],
+    },
+    conversationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.models.Message ||
+  mongoose.model("Message", MessageSchema);

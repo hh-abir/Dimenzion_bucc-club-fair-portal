@@ -36,78 +36,55 @@ export default function AdminDashboard() {
   }, [session]);
 
   useEffect(() => {
-    if (session?.user?.club) {
-      const socketInstance = io();
-      setSocket(socketInstance);
+    if (!session?.user?.club) return;
 
-      socketInstance.emit("user-join", {
-        userName: `${session.user.club} Admin`,
-        club: session.user.club,
-        userType: "admin",
-      });
+    const socketInstance = io({
+      transports: ["websocket"], // avoid polling issues in prod
+    });
 
-      socketInstance.on("new-conversation", () => {
-        loadConversations();
-      });
+    setSocket(socketInstance);
 
-      socketInstance.on("receive-private-message", () => {
-        // ...
-      });
+    socketInstance.emit("user-join", {
+      userName: `${session.user.club} Admin`,
+      club: session.user.club,
+      userType: "admin",
+    });
 
+    // New conversation created by user
+    socketInstance.on("new-conversation", (conversation) => {
+      console.log("New conversation received:", conversation);
+      setConversations((prev) => [conversation, ...prev]);
       loadConversations();
+    });
 
-      return () => {
-        socketInstance.disconnect();
-      };
-    }
+    // Private message received
+    socketInstance.on("receive-private-message", (message: Message) => {
+      console.log("Admin received message:", message);
+      setMessages((prev) => [...prev, message]);
+
+      // Update conversation preview
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv._id === message.conversationId
+            ? {
+                ...conv,
+                lastMessage: {
+                  content: message.content,
+                  timestamp: message.timestamp,
+                },
+              }
+            : conv
+        )
+      );
+    });
+
+    // Initial data fetch
+    loadConversations();
+
+    return () => {
+      socketInstance.disconnect();
+    };
   }, [session, loadConversations]);
-
-  useEffect(() => {
-    if (session?.user?.club) {
-      const socketInstance = io();
-      setSocket(socketInstance);
-
-      socketInstance.emit("user-join", {
-        userName: `${session.user.club} Admin`,
-        club: session.user.club,
-        userType: "admin",
-      });
-
-      socketInstance.on("new-conversation", (conversation) => {
-        console.log("New conversation received:", conversation);
-        setConversations((prev) => [conversation, ...prev]);
-        loadConversations();
-      });
-
-      socketInstance.on("receive-private-message", (message: Message) => {
-        console.log("Admin received message:", message);
-        setMessages((prev) => {
-          const currentMessages = Array.isArray(prev) ? prev : [];
-          return [...currentMessages, message];
-        });
-
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv._id === message.conversationId
-              ? {
-                  ...conv,
-                  lastMessage: {
-                    content: message.content,
-                    timestamp: message.timestamp,
-                  },
-                }
-              : conv
-          )
-        );
-      });
-
-      loadConversations();
-
-      return () => {
-        socketInstance.disconnect();
-      };
-    }
-  }, [loadConversations, session]);
 
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);

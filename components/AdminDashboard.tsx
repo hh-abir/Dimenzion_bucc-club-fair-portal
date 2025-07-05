@@ -38,10 +38,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!session?.user?.club) return;
 
-    const socketInstance = io({
-      transports: ["websocket"], // avoid polling issues in prod
-    });
-
+    const socketInstance = io({ transports: ["websocket"] }); // Force websocket
     setSocket(socketInstance);
 
     socketInstance.emit("user-join", {
@@ -50,19 +47,19 @@ export default function AdminDashboard() {
       userType: "admin",
     });
 
-    // New conversation created by user
+    // Listen for new conversations
     socketInstance.on("new-conversation", (conversation) => {
       console.log("New conversation received:", conversation);
       setConversations((prev) => [conversation, ...prev]);
       loadConversations();
     });
 
-    // Private message received
+    // Listen for incoming messages
     socketInstance.on("receive-private-message", (message: Message) => {
       console.log("Admin received message:", message);
       setMessages((prev) => [...prev, message]);
 
-      // Update conversation preview
+      // Update last message in conversation list
       setConversations((prev) =>
         prev.map((conv) =>
           conv._id === message.conversationId
@@ -78,14 +75,20 @@ export default function AdminDashboard() {
       );
     });
 
-    // Initial data fetch
+    // Initial fetch
     loadConversations();
 
+    // Fallback polling every 2 seconds
+    const interval = setInterval(() => {
+      loadConversations();
+    }, 2000);
+
+    // Cleanup
     return () => {
       socketInstance.disconnect();
+      clearInterval(interval);
     };
   }, [session, loadConversations]);
-
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
 

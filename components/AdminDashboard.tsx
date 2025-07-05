@@ -1,12 +1,14 @@
 "use client";
 import { v4 as uuidv4 } from "uuid";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { Message, Conversation } from "../types";
 
 export default function AdminDashboard() {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const { data: session } = useSession();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -89,6 +91,29 @@ export default function AdminDashboard() {
       clearInterval(interval);
     };
   }, [session, loadConversations]);
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `/api/messages?conversationId=${selectedConversation._id}`
+        );
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setMessages(data);
+        }
+      } catch (error) {
+        console.error("Failed to refresh messages:", error);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
 
@@ -370,6 +395,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+                <div ref={messagesEndRef} />
               </div>
 
               <div className="p-4 border-t flex">

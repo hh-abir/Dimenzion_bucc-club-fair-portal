@@ -54,6 +54,15 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
       };
     }
   }, [isOpen, club]);
+  useEffect(() => {
+    if (isJoined && conversationId) {
+      const interval = setInterval(() => {
+        loadMessages(conversationId);
+      }, 2000); // every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [isJoined, conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

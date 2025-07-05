@@ -340,6 +340,12 @@ export default function AdminDashboard() {
                       <div className="font-semibold">
                         {user?.name || "Unknown User"}
                       </div>
+                      <div className="text-xs text-gray-500 font-mono">
+                        ID:{" "}
+                        {conversation.userId
+                          ? conversation.userId.substring(0, 8) + "..."
+                          : "No ID"}
+                      </div>
                       {conversation.lastMessage && (
                         <div className="text-sm text-gray-600 truncate pr-16">
                           {conversation.lastMessage.content}

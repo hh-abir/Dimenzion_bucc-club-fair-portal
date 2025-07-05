@@ -24,6 +24,10 @@ const MessageSchema = new mongoose.Schema(
       ref: "Conversation",
       required: true,
     },
+    userId: {
+      type: String,
+      index: true, // Add index for better performance
+    },
     timestamp: {
       type: Date,
       default: Date.now,

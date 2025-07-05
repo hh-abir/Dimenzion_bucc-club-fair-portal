@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
+import { v4 as uuidv4 } from "uuid"; // Import from uuid package
+
 import { Message } from "../types";
 
 export interface ChatModalProps {
@@ -9,6 +11,7 @@ export interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 const generateBrowserFingerprint = (): string => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -34,11 +37,26 @@ const generateBrowserFingerprint = (): string => {
   return btoa(JSON.stringify(fingerprint)).slice(0, 32);
 };
 
+// Generate or retrieve user ID
+const generateOrGetUserId = (club: string): string => {
+  const storageKey = `chatUserId_${club}`;
+  let userId = localStorage.getItem(storageKey);
+
+  if (!userId) {
+    userId = uuidv4() ?? "";
+    localStorage.setItem(storageKey, userId);
+  }
+
+  return userId;
+};
+
 export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState<string>("");
+
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isJoined, setIsJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,11 +64,14 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockTimeRemaining, setBlockTimeRemaining] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const savedUserName = localStorage.getItem(`chatUserName_${club}`);
     if (savedUserName) {
       setUserName(savedUserName);
     }
+    const userIdFromStorage = generateOrGetUserId(club);
+    setUserId(userIdFromStorage);
   }, [club]);
 
   // Check if device is blocked
@@ -60,7 +81,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
       const response = await fetch("/api/device-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fingerprint, club }),
+        body: JSON.stringify({ fingerprint, club, userId }),
       });
 
       const data = await response.json();
@@ -71,7 +92,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     } catch (error) {
       console.error("Failed to check device status:", error);
     }
-  }, [club]);
+  }, [club, userId]);
   useEffect(() => {
     if (isOpen) {
       checkDeviceStatus();
@@ -117,13 +138,19 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         console.log("Admin joined notification:", adminName);
         setMessages((prev) => {
           const currentMessages = Array.isArray(prev) ? prev : [];
-          return [...currentMessages];
+          return [
+            ...currentMessages,
+            {
+              content: `${adminName} joined the conversation`,
+              senderName: "System",
+              senderType: "admin" as const,
+              club,
+              timestamp: new Date(),
+              conversationId: conversationId || "",
+              userId: userId,
+            },
+          ];
         });
-      });
-      socketInstance.on("device-blocked", ({ timeRemaining }) => {
-        setIsBlocked(true);
-        setBlockTimeRemaining(timeRemaining);
-        socketInstance.disconnect();
       });
 
       return () => {
@@ -131,7 +158,8 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         socketInstance.disconnect();
       };
     }
-  }, [isOpen, club, isBlocked]);
+  }, [isOpen, club, isBlocked, conversationId, userId]);
+
   useEffect(() => {
     if (!isJoined || !conversationId) return;
 
@@ -185,7 +213,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
   };
 
   const startConversation = async () => {
-    if (userName.trim() && socket && !isBlocked) {
+    if (userName.trim() && socket && !isBlocked && userId) {
       try {
         setIsLoading(true);
         // Save user name to localStorage
@@ -195,7 +223,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         const response = await fetch("/api/conversations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userName, club, fingerprint }),
+          body: JSON.stringify({ userName, club, fingerprint, userId }),
         });
 
         const conversation = await response.json();
@@ -206,11 +234,18 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         }
         setConversationId(conversation._id);
 
-        socket.emit("user-join", { userName, club, userType: "user" });
+        socket.emit("user-join", {
+          userName,
+          club,
+          userType: "user",
+          fingerprint,
+          userId,
+        });
         socket.emit("join-conversation", {
           conversationId: conversation._id,
           userName,
           userType: "user",
+          userId,
         });
 
         setIsJoined(true);
@@ -229,7 +264,8 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
       socket &&
       userName &&
       conversationId &&
-      !isBlocked
+      !isBlocked &&
+      userId
     ) {
       const fingerprint = generateBrowserFingerprint();
 
@@ -239,7 +275,8 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         senderType: "user" as const,
         club,
         conversationId,
-        fingerprint, // Include fingerprint for blocking check
+        fingerprint,
+        userId,
         timestamp: new Date(),
       };
 
@@ -266,6 +303,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                 senderType: "admin" as const,
                 club,
                 timestamp: new Date(),
+                userId: userId,
                 conversationId: conversationId,
               },
             ];
@@ -301,6 +339,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
               senderType: "admin" as const,
               club,
               timestamp: new Date(),
+              userId: userId,
               conversationId: conversationId,
             },
           ];
@@ -344,6 +383,9 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
             {formatTime(blockTimeRemaining)}
           </div>
           <p className="text-sm text-gray-500 mt-2">Time remaining</p>
+          <div className="text-xs text-gray-400 mt-2">
+            User ID: {userId.substring(0, 8)}...
+          </div>
         </div>
       </div>
     );
@@ -360,6 +402,11 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-green-400 rounded-full"></div>
             <span className="font-semibold text-sm">{club} Support</span>
+            {userId && (
+              <span className="text-xs bg-blue-500 px-2 py-1 rounded">
+                ID: {userId.substring(0, 6)}
+              </span>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -386,11 +433,16 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                 <div className="w-full">
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-800">
-                      {userName ? "Welcome Back!" : "Start Chat"}
+                      {userName ? `Welcome Back, ${userName}!` : "Start Chat"}
                     </h3>
                     <p className="text-sm text-gray-600">
                       We&apos;re here to help!
                     </p>
+                    {userId && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Your ID: {userId.substring(0, 8)}...
+                      </p>
+                    )}
                   </div>
                   <input
                     type="text"
@@ -429,7 +481,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                         key={`${message.conversationId}-${index}`}
                         className={`flex ${
                           message.senderType === "user" &&
-                          message.senderName === userName
+                          message.userId === userId
                             ? "justify-end"
                             : "justify-start"
                         }`}
@@ -437,7 +489,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                         <div
                           className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                             message.senderType === "user" &&
-                            message.senderName === userName
+                            message.userId === userId
                               ? "bg-blue-600 text-white rounded-br-none"
                               : message.senderType === "admin"
                               ? "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
@@ -453,7 +505,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                           <div
                             className={`text-xs mt-1 ${
                               message.senderType === "user" &&
-                              message.senderName === userName
+                              message.userId === userId
                                 ? "text-blue-200"
                                 : "text-gray-500"
                             }`}
@@ -481,35 +533,46 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                 </div>
 
                 <div className="p-3 border-t border-gray-200 bg-white rounded-b-lg">
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      placeholder="Type your message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                    />
-                    <button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim()}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  {isBlocked ? (
+                    <div className="text-center py-4">
+                      <div className="text-red-600 font-semibold mb-2">
+                        🚫 You have been blocked
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Time remaining: {formatTime(blockTimeRemaining)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                      />
+                      <button
+                        onClick={sendMessage}
+                        disabled={!newMessage.trim()}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}

@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const { userName, club, fingerprint } = await request.json();
+    const { userName, club, fingerprint, userId } = await request.json();
 
     // Validate required fields
-    if (!userName || !club || !fingerprint) {
+    if (!userName || !club || !fingerprint || !userId) {
       return NextResponse.json(
-        { error: "userName, club, and fingerprint are required" },
+        { error: "userName, club, fingerprint, and userId are required" },
         { status: 400 }
       );
     }
@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Look for existing conversation by fingerprint (more reliable than name)
+    // Look for existing conversation by userId (more reliable than fingerprint)
     let conversation = await Conversation.findOne({
-      fingerprint,
+      userId,
       club,
       isActive: true,
     });
@@ -81,11 +81,12 @@ export async function POST(request: NextRequest) {
       // Create new conversation
       conversation = new Conversation({
         participants: [
-          { name: userName, type: "user" },
+          { name: userName, type: "user", userId },
           { name: `${club} Admin`, type: "admin", club },
         ],
         club,
         fingerprint,
+        userId,
       });
       await conversation.save();
     } else {

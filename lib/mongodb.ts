@@ -1,40 +1,49 @@
+import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+dotenv.config();
 
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable");
-}
+type ConnectionObject = {
+  isConnected?: number;
+};
 
-let cached = (global as any).mongoose;
+const connection: ConnectionObject = {};
+const { MONGODB_URI, MONGODB_DB } = process.env;
 
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
-}
-
-async function dbConnect() {
-  if (cached.conn) {
-    return cached.conn;
+async function dbConnect(): Promise<void> {
+  if (connection.isConnected) {
+    console.log("Using existing connection");
+    return;
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+  if (!MONGODB_URI || !MONGODB_DB) {
+    console.error(
+      "MONGODB_URI and MONGODB_DB must be defined in environment variables."
+    );
+    process.exit(1);
   }
 
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
+    const db = await mongoose.connect(MONGODB_URI, {
+      dbName: MONGODB_DB,
+      bufferCommands: false,
+      maxPoolSize: 500,
+    });
 
-  return cached.conn;
+    connection.isConnected = db.connections[0].readyState;
+
+    console.log("New connection created");
+  } catch (error) {
+    console.error("Error connecting to database", error);
+    process.exit(1);
+  }
 }
+
+// Ensure graceful shutdown
+process.on("SIGINT", async () => {
+  await mongoose.disconnect();
+  console.log("Mongoose connection disconnected due to app termination");
+  process.exit(0);
+});
 
 export default dbConnect;

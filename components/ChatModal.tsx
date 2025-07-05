@@ -194,7 +194,9 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
                     <h3 className="text-lg font-semibold text-gray-800">
                       Start Chat
                     </h3>
-                    <p className="text-sm text-gray-600">We're here to help!</p>
+                    <p className="text-sm text-gray-600">
+                      We&apos;re here to help!
+                    </p>
                   </div>
                   <input
                     type="text"

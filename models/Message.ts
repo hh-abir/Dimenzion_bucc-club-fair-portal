@@ -18,7 +18,6 @@ const MessageSchema = new mongoose.Schema(
     club: {
       type: String,
       required: true,
-      enum: ["BUCC", "BURC", "BUAC"],
     },
     conversationId: {
       type: mongoose.Schema.Types.ObjectId,

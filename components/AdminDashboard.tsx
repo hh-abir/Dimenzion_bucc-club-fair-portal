@@ -1,6 +1,7 @@
 "use client";
+import { v4 as uuidv4 } from "uuid";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { Message, Conversation } from "../types";
@@ -18,14 +19,57 @@ export default function AdminDashboard() {
     null
   );
 
+  const loadConversations = useCallback(async () => {
+    if (session?.user?.club) {
+      try {
+        const response = await fetch(
+          `/api/conversations?club=${session.user.club}`
+        );
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setConversations(data);
+        }
+      } catch (error) {
+        console.error("Failed to load conversations:", error);
+      }
+    }
+  }, [session]);
+
   useEffect(() => {
     if (session?.user?.club) {
       const socketInstance = io();
       setSocket(socketInstance);
 
       socketInstance.emit("user-join", {
-        userName: `${(session.user as any).club} Admin`,
-        club: (session.user as any).club,
+        userName: `${session.user.club} Admin`,
+        club: session.user.club,
+        userType: "admin",
+      });
+
+      socketInstance.on("new-conversation", () => {
+        loadConversations();
+      });
+
+      socketInstance.on("receive-private-message", () => {
+        // ...
+      });
+
+      loadConversations();
+
+      return () => {
+        socketInstance.disconnect();
+      };
+    }
+  }, [session, loadConversations]);
+
+  useEffect(() => {
+    if (session?.user?.club) {
+      const socketInstance = io();
+      setSocket(socketInstance);
+
+      socketInstance.emit("user-join", {
+        userName: `${session.user.club} Admin`,
+        club: session.user.club,
         userType: "admin",
       });
 
@@ -63,23 +107,7 @@ export default function AdminDashboard() {
         socketInstance.disconnect();
       };
     }
-  }, [session]);
-
-  const loadConversations = async () => {
-    if ((session?.user as any)?.club) {
-      try {
-        const response = await fetch(
-          `/api/conversations?club=${(session!.user as any).club}`
-        );
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setConversations(data);
-        }
-      } catch (error) {
-        console.error("Failed to load conversations:", error);
-      }
-    }
-  };
+  }, [loadConversations, session]);
 
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
@@ -93,7 +121,7 @@ export default function AdminDashboard() {
 
       socket.emit("admin-join-conversation", {
         conversationId: conversation._id,
-        adminName: `${(session?.user as any)?.club} Admin`,
+        adminName: `${session?.user?.club} Admin`,
       });
     }
 
@@ -114,33 +142,41 @@ export default function AdminDashboard() {
   };
 
   const sendMessage = async () => {
-    if (newMessage.trim() && socket && selectedConversation && session?.user) {
-      const messageData = {
-        content: newMessage,
-        senderName: `${(session.user as any).club} Admin`,
-        senderType: "admin" as const,
-        club: (session.user as any).club,
-        conversationId: selectedConversation._id,
-        timestamp: new Date(),
-      };
+    if (
+      !newMessage.trim() ||
+      !socket ||
+      !selectedConversation ||
+      !session?.user
+    )
+      return;
 
-      try {
-        await fetch("/api/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(messageData),
-        });
+    if (!session.user.club) {
+      console.error("Club is missing from session!");
+      return;
+    }
 
-        setMessages((prev) => {
-          const currentMessages = Array.isArray(prev) ? prev : [];
-          return [...currentMessages, messageData];
-        });
+    const messageData: Message = {
+      _id: uuidv4(),
+      content: newMessage,
+      senderName: `${session.user.club} Admin`,
+      senderType: "admin",
+      club: session.user.club,
+      conversationId: selectedConversation._id,
+      timestamp: new Date(),
+    };
 
-        socket.emit("send-private-message", messageData);
-        setNewMessage("");
-      } catch (error) {
-        console.error("Failed to send message:", error);
-      }
+    try {
+      await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messageData),
+      });
+
+      setMessages((prev) => [...prev, messageData]);
+      socket.emit("send-private-message", messageData);
+      setNewMessage("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
     }
   };
 
@@ -195,12 +231,10 @@ export default function AdminDashboard() {
       {/* Header with logout button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
-          {(session.user as any).club} Admin Dashboard
+          {session.user!.club} Admin Dashboard
         </h1>
         <div className="flex items-center space-x-4">
-          <span className="text-gray-600">
-            Welcome, {(session.user as any).email}
-          </span>
+          <span className="text-gray-600">Welcome, {session.user!.email}</span>
           <button
             onClick={handleLogout}
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex items-center space-x-2"
@@ -243,7 +277,7 @@ export default function AdminDashboard() {
 
                 return (
                   <div
-                    key={conversation._id}
+                    key={conversation._id ?? Math.random()}
                     className={`p-4 border-b cursor-pointer hover:bg-gray-50 relative group ${
                       selectedConversation?._id === conversation._id
                         ? "bg-blue-50"
@@ -340,7 +374,7 @@ export default function AdminDashboard() {
                 {Array.isArray(messages) &&
                   messages.map((message, index) => (
                     <div
-                      key={index}
+                      key={message._id ?? index}
                       className={`p-3 rounded ${
                         message.senderType === "admin"
                           ? "bg-blue-100 ml-8"

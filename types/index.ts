@@ -3,7 +3,7 @@ export interface Message {
   content: string;
   senderName: string;
   senderType: "user" | "admin";
-  club: "BUCC" | "BURC" | "BUAC";
+  club: string;
   conversationId: string;
   timestamp: Date;
 }

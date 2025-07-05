@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
+import { DefaultUser } from "next-auth";
 
 // Extend the Session, User, and JWT types to include custom fields
 

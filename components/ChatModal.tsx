@@ -55,14 +55,28 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     }
   }, [isOpen, club]);
   useEffect(() => {
-    if (isJoined && conversationId) {
-      const interval = setInterval(() => {
-        loadMessages(conversationId);
-      }, 2000); // every 2 seconds
+    if (!isJoined || !conversationId) return;
 
-      return () => clearInterval(interval);
-    }
-  }, [isJoined, conversationId]);
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `/api/messages?conversationId=${conversationId}`
+        );
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          // Only update if there's a real change
+          if (data.length !== messages.length) {
+            setMessages(data);
+          }
+        }
+      } catch (error) {
+        console.error("Polling failed in ChatModal:", error);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isJoined, conversationId, messages.length]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

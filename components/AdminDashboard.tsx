@@ -91,6 +91,7 @@ export default function AdminDashboard() {
       clearInterval(interval);
     };
   }, [session, loadConversations]);
+
   useEffect(() => {
     if (!selectedConversation) return;
 

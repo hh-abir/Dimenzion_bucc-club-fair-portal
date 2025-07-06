@@ -4,30 +4,9 @@ import connectDB from "@/lib/mongodb";
 import Club, { IClub } from "@/models/Club";
 import ImageCarousel from "@/components/ImageCarousel";
 import ChatButton from "@/components/ChatButton";
-import HeroSection from "@/components/HeroSection"; // if you moved it to its own component
+import HeroSection from "@/components/HeroSection";
 import { ExternalLink } from "lucide-react";
 
-// Fetch club data from DB
-async function getClubData(clubId: string): Promise<IClub | null> {
-  try {
-    await connectDB();
-    const club = await Club.findOne({ clubId }).lean();
-    return club ? JSON.parse(JSON.stringify(club)) : null;
-  } catch (error) {
-    console.error("Error fetching club:", error);
-    return null;
-  }
-}
-
-// Extract YouTube ID from URL
-function extractYouTubeId(url: string): string | null {
-  const regex =
-    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-  const match = url.match(regex);
-  return match ? match[1] : null;
-}
-
-// ✅ This is the correct and minimal Page Component type signature
 export default async function ClubPage({
   params,
 }: {
@@ -45,7 +24,6 @@ export default async function ClubPage({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero section */}
       <HeroSection
         clubPhoto={club.clubPhoto}
         clubLogo={club.clubLogo}
@@ -53,9 +31,7 @@ export default async function ClubPage({
         clubMotto={club.clubMotto}
       />
 
-      {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-        {/* About Section */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-6">About Us</h2>
           <div className="prose prose-lg max-w-none text-gray-700">
@@ -63,7 +39,6 @@ export default async function ClubPage({
           </div>
         </section>
 
-        {/* YouTube Video */}
         {youtubeId && (
           <section>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -81,7 +56,6 @@ export default async function ClubPage({
           </section>
         )}
 
-        {/* Activities Section */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
             Our Activities
@@ -91,7 +65,6 @@ export default async function ClubPage({
           </div>
         </section>
 
-        {/* Image Carousel */}
         {club.carouselImages.length > 0 && (
           <section>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Gallery</h2>
@@ -99,7 +72,6 @@ export default async function ClubPage({
           </section>
         )}
 
-        {/* Why Join Us */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
             Why Join Us?
@@ -109,7 +81,6 @@ export default async function ClubPage({
           </div>
         </section>
 
-        {/* Registration Button */}
         <section className="text-center py-12">
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white">
             <h2 className="text-3xl font-bold mb-4">Ready to Join?</h2>
@@ -130,8 +101,27 @@ export default async function ClubPage({
         </section>
       </div>
 
-      {/* Floating Chat Button */}
       <ChatButton />
     </div>
   );
+}
+
+// --- keep helper functions below ---
+
+async function getClubData(clubId: string): Promise<IClub | null> {
+  try {
+    await connectDB();
+    const club = await Club.findOne({ clubId }).lean();
+    return club ? JSON.parse(JSON.stringify(club)) : null;
+  } catch (error) {
+    console.error("Error fetching club:", error);
+    return null;
+  }
+}
+
+function extractYouTubeId(url: string): string | null {
+  const regex =
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 }

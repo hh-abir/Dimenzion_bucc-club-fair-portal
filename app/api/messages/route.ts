@@ -1,82 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "../../../lib/mongodb";
+import connectDB from "../../../lib/mongodb";
 import Message from "../../../models/Message";
-import Conversation from "../../../models/Conversation";
-import DeviceBlock from "@/models/DeviceBlock";
 
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
+    // Ensure connection is established before any database operations
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get("conversationId");
 
     if (!conversationId) {
-      return NextResponse.json([], { status: 200 });
+      return NextResponse.json(
+        { error: "conversationId parameter required" },
+        { status: 400 }
+      );
     }
 
-    const messages = await Message.find({ conversationId })
-      .sort({ timestamp: 1 })
-      .limit(100);
+    // Now safe to make database queries
+    const messages = await Message.find({ conversationId }).sort({
+      timestamp: 1,
+    });
 
-    return NextResponse.json(Array.isArray(messages) ? messages : []);
+    return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching messages:", error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: "Failed to fetch messages" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
+    // Ensure connection is established before any database operations
+    await connectDB();
 
-    const {
-      content,
-      senderName,
-      senderType,
-      club,
-      conversationId,
-      fingerprint,
-    } = await request.json();
+    const messageData = await request.json();
 
-    if (fingerprint && senderType === "user") {
-      const block = await DeviceBlock.findOne({
-        fingerprint,
-        club,
-        blockedUntil: { $gt: new Date() },
-      });
-
-      if (block) {
-        const timeRemaining = Math.ceil(
-          (block.blockedUntil.getTime() - Date.now()) / 1000
-        );
-        return NextResponse.json(
-          {
-            blocked: true,
-            timeRemaining,
-            reason: block.reason,
-          },
-          { status: 403 }
-        );
-      }
-    }
-
-    const message = new Message({
-      content,
-      senderName,
-      senderType,
-      club,
-      conversationId,
-    });
-
+    const message = new Message(messageData);
     await message.save();
-
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: {
-        content,
-        timestamp: new Date(),
-      },
-    });
 
     return NextResponse.json(message);
   } catch (error) {

@@ -204,7 +204,7 @@ export default function AdminDashboard() {
     }
 
     const messageData: Message = {
-      _id: uuidv4(),
+      // Remove this line: _id: uuidv4(),
       content: newMessage,
       senderName: `${session.user.club} Admin`,
       senderType: "admin",
@@ -214,18 +214,24 @@ export default function AdminDashboard() {
     };
 
     try {
-      await fetch("/api/messages", {
+      const response = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(messageData),
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to save message");
+      }
+
+      const savedMessage = await response.json();
+
       setMessages((prev) => {
         const currentMessages = Array.isArray(prev) ? prev : [];
-        return [...currentMessages, messageData];
+        return [...currentMessages, savedMessage]; // Use the saved message with MongoDB-generated _id
       });
 
-      socket.emit("send-private-message", messageData);
+      socket.emit("send-private-message", savedMessage);
       setNewMessage("");
     } catch (error) {
       console.error("Failed to send message:", error);

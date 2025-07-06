@@ -1,48 +1,49 @@
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-dotenv.config();
+const MONGODB_URI = process.env.MONGODB_URI!;
 
-type ConnectionObject = {
-  isConnected?: number;
-};
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable");
+}
 
-const connection: ConnectionObject = {};
-const { MONGODB_URI, MONGODB_DB } = process.env;
+// Declare global type for TypeScript
+declare global {
+  var mongoose: {
+    conn: mongoose.Connection | null;
+    promise: Promise<mongoose.Connection> | null;
+  };
+}
 
-async function dbConnect(): Promise<void> {
-  if (connection.isConnected) {
-    console.log("Using existing connection");
-    return;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB(): Promise<mongoose.Connection> {
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  if (!MONGODB_URI || !MONGODB_DB) {
-    console.error(
-      "MONGODB_URI and MONGODB_DB must be defined in environment variables."
-    );
-    process.exit(1);
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false, // Keep this setting
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log("MongoDB connected successfully");
+      return mongoose.connection;
+    });
   }
 
   try {
-    const db = await mongoose.connect(MONGODB_URI, {
-      dbName: MONGODB_DB,
-      bufferCommands: false,
-      maxPoolSize: 500,
-    });
-
-    connection.isConnected = db.connections[0].readyState;
-
-    console.log("New connection created");
-  } catch (error) {
-    console.error("Error connecting to database", error);
-    process.exit(1);
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (e) {
+    cached.promise = null;
+    console.error("MongoDB connection failed:", e);
+    throw e;
   }
 }
 
-process.on("SIGINT", async () => {
-  await mongoose.disconnect();
-  console.log("Mongoose connection disconnected due to app termination");
-  process.exit(0);
-});
-
-export default dbConnect;
+export default connectDB;

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "../../../lib/mongodb";
+import connectDB from "../../../lib/mongodb";
 import DeviceBlock from "../../../models/DeviceBlock";
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
 
     const { fingerprint, club } = await request.json();
 

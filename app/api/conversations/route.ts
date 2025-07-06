@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "../../../lib/mongodb";
+import connectDB from "../../../lib/mongodb";
 import Conversation from "../../../models/Conversation";
 import DeviceBlock from "../../../models/DeviceBlock";
 
 export async function GET(request: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const club = searchParams.get("club");
@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
+    // Ensure connection is established before any database operations
+    await connectDB();
 
     const { userName, club, fingerprint, userId } = await request.json();
 

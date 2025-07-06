@@ -14,7 +14,6 @@ const UserSchema = new mongoose.Schema(
     club: {
       type: String,
       required: true,
-      enum: ["BUCC", "BURC", "BUAC"],
     },
     role: {
       type: String,

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import dbConnect from "../../../../lib/mongodb";
+import connectDB from "../../../../lib/mongodb";
 import Conversation from "../../../../models/Conversation";
 import Message from "../../../../models/Message";
 
@@ -10,7 +10,7 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
-    await dbConnect();
+    await connectDB();
 
     if (!id) {
       return NextResponse.json(

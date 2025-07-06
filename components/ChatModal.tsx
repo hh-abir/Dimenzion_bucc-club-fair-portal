@@ -73,6 +73,56 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
     setUserId(userIdFromStorage);
   }, [club]);
 
+  useEffect(() => {
+    const validateOrStartConversation = async () => {
+      const storedConversationId = localStorage.getItem(
+        `conversationId_${club}`
+      );
+
+      if (!userId || !userName) return;
+
+      if (storedConversationId) {
+        try {
+          const response = await fetch(
+            `/api/messages?conversationId=${storedConversationId}`
+          );
+          if (!response.ok) throw new Error("Invalid conversationId");
+
+          const data = await response.json();
+          if (!Array.isArray(data)) throw new Error("Invalid message format");
+
+          setConversationId(storedConversationId);
+          setMessages(data);
+          setIsJoined(true);
+          return;
+        } catch (error) {
+          console.warn("ConversationId invalid or deleted. Cleaning up...");
+          localStorage.removeItem(`conversationId_${club}`);
+          setConversationId(null);
+          setIsJoined(false);
+        }
+      }
+
+      // 👇 Auto-start new conversation if none is valid
+      if (socket && !isBlocked) {
+        startConversation(); // 🔁 will create & join a new one
+      }
+    };
+
+    if (isOpen && !isJoined && !conversationId) {
+      validateOrStartConversation();
+    }
+  }, [
+    isOpen,
+    club,
+    userId,
+    userName,
+    conversationId,
+    isJoined,
+    isBlocked,
+    socket,
+  ]);
+
   const checkDeviceStatus = useCallback(async () => {
     const fingerprint = generateBrowserFingerprint();
     try {

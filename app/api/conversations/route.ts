@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const club = searchParams.get("club");
+    const club = searchParams.get("club")?.toLocaleLowerCase();
 
     if (!club) {
       return NextResponse.json(

@@ -282,46 +282,64 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      {/* Header with logout button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
-          {session.user!.club} Admin Dashboard
-        </h1>
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-600">Welcome, {session.user!.email}</span>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex items-center space-x-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            <span>Logout</span>
-          </button>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header - Fixed at top */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-full mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {session.user!.club} Admin Dashboard
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Manage conversations and support requests
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {session.user!.email}
+                </p>
+                <p className="text-xs text-gray-500">Administrator</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center space-x-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-6 h-96">
-        {/* Conversations List */}
-        <div className="w-1/3 bg-white rounded-lg shadow-md">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">Active Conversations</h2>
-            <p className="text-sm text-gray-500">
+      {/* Main Content - Full height minus header */}
+      <div className="flex h-[calc(100vh-88px)]">
+        {/* Conversations Sidebar - Fixed width */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-4 border-b bg-gray-50">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Active Conversations
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
               {conversations.length} conversation(s)
             </p>
           </div>
-          <div className="overflow-y-auto h-80">
+
+          <div className="flex-1 overflow-y-auto">
             {Array.isArray(conversations) &&
               conversations.map((conversation) => {
                 const user =
@@ -333,35 +351,44 @@ export default function AdminDashboard() {
                 return (
                   <div
                     key={conversation._id ?? Math.random()}
-                    className={`p-4 border-b cursor-pointer hover:bg-gray-50 relative group ${
+                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 relative group transition-colors ${
                       selectedConversation?._id === conversation._id
-                        ? "bg-blue-50"
+                        ? "bg-blue-50 border-blue-200"
                         : ""
                     }`}
                   >
                     <div onClick={() => selectConversation(conversation)}>
-                      <div className="font-semibold">
-                        {user?.name || "Unknown User"}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-gray-900">
+                          {user?.name || "Unknown User"}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(conversation.updatedAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500 font-mono">
+
+                      <div className="text-xs text-gray-500 font-mono mb-2">
                         ID:{" "}
                         {conversation.userId
                           ? conversation.userId.substring(0, 8) + "..."
                           : "No ID"}
                       </div>
+
                       {conversation.lastMessage && (
                         <div className="text-sm text-gray-600 truncate pr-16">
                           {conversation.lastMessage.content}
                         </div>
                       )}
-                      <div className="text-xs text-gray-400">
-                        {new Date(conversation.updatedAt).toLocaleString()}
-                      </div>
                     </div>
 
                     {/* Action buttons */}
                     <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {/* Block button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -369,11 +396,11 @@ export default function AdminDashboard() {
                             conversation.fingerprint || conversation._id
                           );
                         }}
-                        className="bg-orange-500 text-white p-1 rounded hover:bg-orange-600"
+                        className="bg-orange-500 text-white p-1.5 rounded hover:bg-orange-600 transition-colors"
                         title="Block device"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-3 h-3"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -387,17 +414,16 @@ export default function AdminDashboard() {
                         </svg>
                       </button>
 
-                      {/* Delete button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowDeleteConfirm(conversation._id);
                         }}
-                        className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                        className="bg-red-500 text-white p-1.5 rounded hover:bg-red-600 transition-colors"
                         title="Delete conversation"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-3 h-3"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -417,28 +443,34 @@ export default function AdminDashboard() {
 
             {conversations.length === 0 && (
               <div className="p-8 text-center text-gray-500">
-                <div className="text-4xl mb-2">💬</div>
-                <div>No conversations yet</div>
+                <div className="text-4xl mb-4">💬</div>
+                <div className="font-medium mb-2">No conversations yet</div>
                 <div className="text-sm">New chats will appear here</div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Chat Window */}
-        <div className="flex-1 bg-white rounded-lg shadow-md flex flex-col">
+        {/* Chat Window - Takes remaining space */}
+        <div className="flex-1 flex flex-col bg-white">
           {selectedConversation ? (
             <>
-              <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-xl font-semibold">
-                  Chat with{" "}
-                  {selectedConversation?.participants &&
-                  Array.isArray(selectedConversation.participants)
-                    ? selectedConversation.participants.find(
-                        (p) => p.type === "user"
-                      )?.name || "Unknown User"
-                    : "Unknown User"}
-                </h2>
+              {/* Chat Header */}
+              <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Chat with{" "}
+                    {selectedConversation?.participants &&
+                    Array.isArray(selectedConversation.participants)
+                      ? selectedConversation.participants.find(
+                          (p) => p.type === "user"
+                        )?.name || "Unknown User"
+                      : "Unknown User"}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    User ID: {selectedConversation.userId?.substring(0, 8)}...
+                  </p>
+                </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() =>
@@ -447,7 +479,7 @@ export default function AdminDashboard() {
                           selectedConversation._id
                       )
                     }
-                    className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors flex items-center space-x-1"
+                    className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition-colors flex items-center space-x-2"
                   >
                     <svg
                       className="w-4 h-4"
@@ -462,13 +494,13 @@ export default function AdminDashboard() {
                         d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
                       />
                     </svg>
-                    <span>Block</span>
+                    <span>Block User</span>
                   </button>
                   <button
                     onClick={() =>
                       setShowDeleteConfirm(selectedConversation._id)
                     }
-                    className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors flex items-center space-x-1"
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition-colors flex items-center space-x-2"
                   >
                     <svg
                       className="w-4 h-4"
@@ -483,63 +515,108 @@ export default function AdminDashboard() {
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                       />
                     </svg>
-                    <span>Delete</span>
+                    <span>Delete Chat</span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {/* Messages Area - Flexible height */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
                 {Array.isArray(messages) &&
                   messages.map((message, index) => (
                     <div
                       key={message._id ?? index}
-                      className={`p-3 rounded ${
+                      className={`flex ${
                         message.senderType === "admin"
-                          ? "bg-blue-100 ml-8"
-                          : "bg-gray-100 mr-8"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
-                      <div className="font-semibold text-sm">
-                        {message.senderName}
-                      </div>
-                      <div>{message.content}</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(message.timestamp).toLocaleString()}
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                          message.senderType === "admin"
+                            ? "bg-blue-600 text-white rounded-br-none"
+                            : "bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm"
+                        }`}
+                      >
+                        <div
+                          className={`font-semibold text-xs mb-1 ${
+                            message.senderType === "admin"
+                              ? "text-blue-100"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {message.senderName}
+                        </div>
+                        <div className="text-sm leading-relaxed">
+                          {message.content}
+                        </div>
+                        <div
+                          className={`text-xs mt-2 ${
+                            message.senderType === "admin"
+                              ? "text-blue-200"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {new Date(message.timestamp).toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   ))}
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 border-t flex">
-                <input
-                  type="text"
-                  placeholder="Type your response..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 p-2 border rounded-l"
-                  onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                />
-                <button
-                  onClick={sendMessage}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600"
-                >
-                  Send
-                </button>
+              {/* Message Input - Fixed at bottom */}
+              <div className="p-4 border-t bg-white">
+                <div className="flex space-x-3">
+                  <input
+                    type="text"
+                    placeholder="Type your response..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      />
+                    </svg>
+                    <span>Send</span>
+                  </button>
+                </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
               <div className="text-center">
                 <div className="text-6xl mb-4">💬</div>
-                <div className="text-xl mb-2">Select a conversation</div>
-                <div>Choose a conversation from the list to start chatting</div>
+                <div className="text-2xl font-semibold mb-2 text-gray-700">
+                  Select a conversation
+                </div>
+                <div className="text-gray-600">
+                  Choose a conversation from the sidebar to start chatting
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Modals remain the same */}
       {/* Block Device Modal */}
       {showBlockModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

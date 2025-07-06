@@ -103,10 +103,10 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         }
       }
 
+      // 🔄 Just set the name; don't start conversation
       const storedName = localStorage.getItem(`chatUserName_${club}`);
-      if (socket && storedName && !isBlocked) {
+      if (storedName) {
         setUserName(storedName);
-        startConversation(); // auto-start only if name was previously stored
       }
     };
 

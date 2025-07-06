@@ -79,7 +79,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         `conversationId_${club}`
       );
 
-      if (!userId || !userName) return;
+      if (!userId) return;
 
       if (storedConversationId) {
         try {
@@ -103,26 +103,17 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         }
       }
 
-      // 👇 Auto-start new conversation if none is valid
-      if (socket && !isBlocked) {
-        startConversation(); // 🔁 will create & join a new one
+      const storedName = localStorage.getItem(`chatUserName_${club}`);
+      if (socket && storedName && !isBlocked) {
+        setUserName(storedName);
+        startConversation(); // auto-start only if name was previously stored
       }
     };
 
     if (isOpen && !isJoined && !conversationId) {
       validateOrStartConversation();
     }
-  }, [
-    isOpen,
-    club,
-    userId,
-    userName,
-    conversationId,
-    isJoined,
-    isBlocked,
-    socket,
-  ]);
-
+  }, [isOpen, club, userId, conversationId, isJoined, isBlocked, socket]);
   const checkDeviceStatus = useCallback(async () => {
     const fingerprint = generateBrowserFingerprint();
     try {

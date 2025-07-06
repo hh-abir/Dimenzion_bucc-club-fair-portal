@@ -36,7 +36,6 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   };
 
   const handleCardClick = () => {
-    // For now, just log the route - you can implement actual routing later
     console.log(`Navigating to: ${route}`);
     router.push(route);
   };
@@ -86,8 +85,8 @@ export default function AdminDashBoard() {
 
   const [clubName, setClubName] = useState<string | undefined>(
     session?.user?.club
-  ); // You can make this dynamic
-  const [userName, setUserName] = useState<string>(session?.user?.email ?? ""); // You can get this from auth context
+  );
+  const [userName, setUserName] = useState<string>(session?.user?.email ?? "");
 
   useEffect(() => {
     if (session?.user?.club) {

@@ -59,7 +59,6 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
     },
   ];
 
-  // Prepare socialLinks entries that actually exist
   const socialEntries = Object.entries(club.socialLinks || {}).filter(
     ([url]) => url && url.length > 0
   ) as [keyof typeof club.socialLinks, string][];
@@ -208,7 +207,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
             {/* Schedule Button */}
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               <Link
-                href="/schedule" // Replace with your schedule route
+                href="/schedule"
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3 group"
               >
                 <Calendar className="h-5 w-5" />

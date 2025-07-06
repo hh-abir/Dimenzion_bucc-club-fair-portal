@@ -1,4 +1,3 @@
-// types/club.ts
 export interface IClub {
   _id?: string;
   clubId: string;

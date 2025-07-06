@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Ensure connection is established before any database operations
     await connectDB();
 
     const { userName, club, fingerprint, userId } = await request.json();

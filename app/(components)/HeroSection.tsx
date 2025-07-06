@@ -17,7 +17,6 @@ export default function HeroSection() {
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          // Removed opacity to make the GIF vivid
         }}
       />
 

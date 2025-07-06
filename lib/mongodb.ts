@@ -6,7 +6,6 @@ if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable");
 }
 
-// Declare global type for TypeScript
 declare global {
   var mongoose: {
     conn: mongoose.Connection | null;
@@ -27,7 +26,7 @@ async function connectDB(): Promise<mongoose.Connection> {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false, // Keep this setting
+      bufferCommands: false,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

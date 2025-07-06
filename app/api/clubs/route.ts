@@ -8,10 +8,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Check if club already exists for this clubId
     const existingClub = await Club.findOne({ clubId: body.clubId });
     if (existingClub) {
-      // Update existing club
       const updatedClub = await Club.findOneAndUpdate(
         { clubId: body.clubId },
         body,
@@ -22,7 +20,6 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
     } else {
-      // Create new club
       const club = new Club(body);
       await club.save();
       return NextResponse.json(

@@ -203,7 +203,6 @@ export default function AdminDashboard() {
     }
 
     const messageData: Message = {
-      // Remove this line: _id: uuidv4(),
       content: newMessage,
       senderName: `${session.user.club} Admin`,
       senderType: "admin",
@@ -227,7 +226,7 @@ export default function AdminDashboard() {
 
       setMessages((prev) => {
         const currentMessages = Array.isArray(prev) ? prev : [];
-        return [...currentMessages, savedMessage]; // Use the saved message with MongoDB-generated _id
+        return [...currentMessages, savedMessage];
       });
 
       socket.emit("send-private-message", savedMessage);

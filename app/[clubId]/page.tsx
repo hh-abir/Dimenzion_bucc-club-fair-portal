@@ -14,7 +14,6 @@ export default async function ClubPage({
 
   if (!club) notFound();
 
-  // Serialize for client
   const clubData = JSON.parse(JSON.stringify(club));
 
   return <ClubPageClient club={clubData} />;

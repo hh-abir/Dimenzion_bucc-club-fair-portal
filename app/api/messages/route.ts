@@ -4,7 +4,6 @@ import Message from "../../../models/Message";
 
 export async function GET(request: NextRequest) {
   try {
-    // Ensure connection is established before any database operations
     await connectDB();
 
     const { searchParams } = new URL(request.url);
@@ -17,7 +16,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Now safe to make database queries
     const messages = await Message.find({ conversationId }).sort({
       timestamp: 1,
     });
@@ -34,7 +32,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Ensure connection is established before any database operations
     await connectDB();
 
     const messageData = await request.json();

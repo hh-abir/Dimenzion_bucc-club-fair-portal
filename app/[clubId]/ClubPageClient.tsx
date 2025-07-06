@@ -66,40 +66,39 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="relative h-[70vh] overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={club.clubPhoto}
-            alt={`${club.clubName} Cover`}
-            className="w-full h-full object-cover"
-          />
-        </div>
+      <div className="relative h-[48vh] sm:h-[60vh] md:h-[70vh] overflow-hidden">
+        {/* Cover Image */}
+        <img
+          src={club.clubPhoto}
+          alt={`${club.clubName} Cover`}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-        {/* Bottom black gradient overlay for readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent z-10" />
+        {/* Gradient Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/80 to-transparent z-10" />
 
-        {/* Content - Club Logo + Name + Motto + Social Links */}
-        <div className="relative z-20 h-full flex items-end px-6 sm:px-12 pb-10">
-          <div className="flex items-center space-x-6">
+        {/* Content */}
+        <div className="relative z-20 h-full flex flex-col justify-end">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-8 px-4 sm:px-10 pb-6 sm:pb-10">
             {/* Club Logo */}
             <img
               src={club.clubLogo}
               alt={`${club.clubName} Logo`}
-              className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white shadow-lg"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-white shadow-lg mb-3 sm:mb-0"
             />
-
-            {/* Club Name + Motto + Social Links */}
-            <div className="text-white">
-              <h1 className="text-3xl md:text-5xl font-bold">
+            {/* Club Name, Motto, Socials */}
+            <div className="text-white text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight">
                 {club.clubName}
               </h1>
-              <p className="text-sm md:text-lg text-blue-100 mt-1">
-                {club.clubMotto}
-              </p>
-
+              {club.clubMotto && (
+                <p className="text-xs sm:text-sm md:text-lg text-blue-100 mt-1">
+                  {club.clubMotto}
+                </p>
+              )}
               {/* Social Links */}
               {socialEntries.length > 0 && (
-                <div className="flex space-x-4 mt-4">
+                <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-3">
                   {socialEntries.map(([platform, url]) => {
                     const Icon = getSocialIcon(platform);
                     return (
@@ -111,7 +110,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                         className="text-blue-200 hover:text-white transition-colors"
                         aria-label={platform}
                       >
-                        <Icon className="w-6 h-6" />
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                       </a>
                     );
                   })}

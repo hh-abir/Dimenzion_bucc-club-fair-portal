@@ -34,13 +34,13 @@ export default function HeroSection() {
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-6 text-lg font-medium">
           <span className="flex items-center gap-2">
-            <FaCalendarAlt /> July 20, 2025
+            <FaCalendarAlt /> July 8–9, 2025
           </span>
           <span className="flex items-center gap-2">
-            <FaClock /> 10:00 AM – 5:00 PM
+            <FaClock /> 11:00 AM – 4:30 PM
           </span>
           <span className="flex items-center gap-2">
-            <FaMapMarkerAlt /> BRAC University Auditorium
+            <FaMapMarkerAlt /> Multipurpose Hall
           </span>
         </div>
       </div>

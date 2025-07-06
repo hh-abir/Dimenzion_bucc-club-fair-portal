@@ -22,7 +22,7 @@ export default function PageBuilder() {
   const [uploadingImages, setUploadingImages] = useState<{
     [key: string]: boolean;
   }>({});
-  const [clubId] = useState("bucc"); // This would come from auth/session
+  const [clubId] = useState("bucc");
 
   const {
     register,
@@ -52,7 +52,6 @@ export default function PageBuilder() {
 
   const watchedValues = watch();
 
-  // Load existing club data
   useEffect(() => {
     const loadClubData = async () => {
       try {
@@ -62,7 +61,6 @@ export default function PageBuilder() {
         if (data.club) {
           reset(data.club);
         } else {
-          // Create club with default values if it doesn't exist
           const defaultClub = {
             clubId: clubId,
             clubPhoto: "",

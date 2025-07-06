@@ -95,7 +95,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
           setMessages(data);
           setIsJoined(true);
           return;
-        } catch (error) {
+        } catch {
           console.warn("ConversationId invalid or deleted. Cleaning up...");
           localStorage.removeItem(`conversationId_${club}`);
           setConversationId(null);

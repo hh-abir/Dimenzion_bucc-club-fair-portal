@@ -5,7 +5,6 @@ import ReactMarkdown from "react-markdown";
 import ImageCarousel from "@/components/ImageCarousel";
 import {
   ExternalLink,
-  Calendar,
   ArrowRight,
   Newspaper,
   ExternalLinkIcon,
@@ -24,7 +23,7 @@ import {
 
 import type { IClub } from "@/models/Club";
 import ChatButton from "@/components/ChatButton";
-import Link from "next/link";
+import EmbedToggle from "../EmbedToggle";
 
 interface ClubPageClientProps {
   club: IClub;
@@ -224,16 +223,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
           {/* Sidebar - 20-30% width */}
           <div className="lg:w-1/4 space-y-6">
             {/* Schedule Button */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl">
-              <Link
-                href="/schedule"
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3 group"
-              >
-                <Calendar className="h-5 w-5" />
-                <span>View Schedule</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
+            <EmbedToggle />
 
             {/* Advertisement Section */}
             <div className="bg-white rounded-2xl p-4 shadow-xl">

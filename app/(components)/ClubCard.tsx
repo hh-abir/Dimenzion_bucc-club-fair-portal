@@ -48,9 +48,10 @@ export default function ClubCard({ club }: { club: IClub }) {
         <h3 className="text-xl font-extrabold text-gray-800">
           {club.clubName}
         </h3>
-        {club.clubMotto && (
-          <p className="text-gray-500 text-sm italic mt-1">{club.clubMotto}</p>
-        )}
+        <p className="text-gray-500 text-sm italic mt-1">
+          {club.clubMotto || "."}
+        </p>
+
         <p className="text-gray-600 text-sm mt-2 line-clamp-2">
           {club.aboutSection ||
             "This club is a dynamic space where students explore, innovate, and grow together."}

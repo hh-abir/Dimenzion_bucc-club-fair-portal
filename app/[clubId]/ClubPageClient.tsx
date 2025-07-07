@@ -26,6 +26,11 @@ interface ClubPageClientProps {
   club: IClub;
 }
 
+function getRandomClubs(clubs: IClub[], count: number): IClub[] {
+  const shuffled = [...clubs].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
 export default function ClubPageClient({ club }: ClubPageClientProps) {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -44,13 +49,13 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
 
   const importantLinks = [
     {
-      title: "BUCC Website",
-      link: "https://bracucc.org",
+      title: "BRACU Website",
+      link: "https://www.bracu.ac.bd/",
     },
 
     {
       title: "Report Bug",
-      link: club.registrationFormLink,
+      link: "",
     },
   ];
 
@@ -252,7 +257,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                     No other clubs available yet.
                   </div>
                 ) : (
-                  otherClubs.map((otherClub) => (
+                  getRandomClubs(otherClubs, 4).map((otherClub) => (
                     <a
                       key={otherClub.clubId}
                       href={`/${otherClub.clubId}`}

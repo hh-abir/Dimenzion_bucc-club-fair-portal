@@ -9,13 +9,18 @@ import {
   ArrowRight,
   Newspaper,
   ExternalLinkIcon,
-  Twitter,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Youtube,
-  Github,
 } from "lucide-react";
+import { FaExternalLinkAlt } from "react-icons/fa";
+
+import {
+  FaTwitter,
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaYoutube,
+  FaGithub,
+  FaGlobe,
+} from "react-icons/fa";
 
 import type { IClub } from "@/models/Club";
 import ChatButton from "@/components/ChatButton";
@@ -58,7 +63,8 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
       link: "/newsletter/activities-report",
     },
   ];
-  // Place this at the top, before any usage
+
+  // Supported platforms for icons
   const supportedPlatforms = [
     "twitter",
     "facebook",
@@ -69,13 +75,13 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
     "website",
   ];
 
+  // Filter social links: only non-empty and supported
   const socialEntries = Object.entries(club.socialLinks || {}).filter(
-    ([url]) => url && url.length > 0
+    ([platform, url]) =>
+      supportedPlatforms.includes(platform.toLowerCase()) &&
+      url &&
+      url.length > 0
   ) as [keyof typeof club.socialLinks, string][];
-
-  const filteredSocialEntries = socialEntries.filter(([platform]) =>
-    supportedPlatforms.includes(platform.toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,10 +117,9 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                 </p>
               )}
               {/* Social Links */}
-              {/* Social Links */}
-              {filteredSocialEntries.length > 0 && (
+              {socialEntries.length > 0 && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-3">
-                  {filteredSocialEntries.map(([platform, url]) => {
+                  {socialEntries.map(([platform, url]) => {
                     const Icon = getSocialIcon(platform);
                     return (
                       <a
@@ -369,6 +374,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
   );
 }
 
+// Helper function to extract YouTube ID
 function extractYouTubeId(url: string): string | null {
   const regex =
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -376,24 +382,24 @@ function extractYouTubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
+// Helper function to get the correct icon for each platform
 function getSocialIcon(platform: string) {
   switch (platform.toLowerCase()) {
     case "twitter":
-      return Twitter;
+      return FaTwitter;
     case "facebook":
-      return Facebook;
+      return FaFacebook;
     case "instagram":
-      return Instagram;
+      return FaInstagram;
     case "linkedin":
-      return Linkedin;
+      return FaLinkedin;
     case "youtube":
-      return Youtube;
-
+      return FaYoutube;
     case "github":
-      return Github;
+      return FaGithub;
     case "website":
-      return ExternalLink;
+      return FaGlobe;
     default:
-      return ExternalLink;
+      return FaExternalLinkAlt;
   }
 }

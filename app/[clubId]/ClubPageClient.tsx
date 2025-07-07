@@ -55,7 +55,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
 
     {
       title: "Report Bug",
-      link: "",
+      link: "https://docs.google.com/forms/d/e/1FAIpQLSfnlOcw85JDTRcH8ndxrLiAWnsWWHm9ApihAnitbYzrtAj0OQ/viewform?usp=dialog",
     },
   ];
 

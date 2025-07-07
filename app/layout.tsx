@@ -5,8 +5,9 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "BRAC University CLub Fair Summer 2025",
-  description: "Chat with BRAC University clubs",
+  title: "BRAC University Club Fair Summer 2025",
+  description:
+    "A platform to showcase and connect with clubs at BRAC University",
 };
 
 export default function RootLayout({

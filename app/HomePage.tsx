@@ -6,6 +6,10 @@ import SearchBar from "./(components)/SearchBar";
 import ClubCard from "./(components)/ClubCard";
 import { IClub } from "@/types/club";
 
+function shuffleArray<T>(array: T[]): T[] {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
 export default function HomePage() {
   const [search, setSearch] = useState("");
   const [clubs, setClubs] = useState<IClub[]>([]);
@@ -96,7 +100,7 @@ export default function HomePage() {
                 No clubs found.
               </p>
             ) : (
-              filteredClubs.map((club) => (
+              shuffleArray(filteredClubs).map((club) => (
                 <motion.div key={club._id} variants={cardVariants}>
                   <ClubCard club={club} />
                 </motion.div>

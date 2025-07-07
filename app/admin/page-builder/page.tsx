@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ReactMarkdown from "react-markdown";
+import { useSession } from "next-auth/react";
+
 import {
   Image as ImageIcon,
   Plus,
@@ -23,7 +25,9 @@ export default function PageBuilder() {
   const [uploadingImages, setUploadingImages] = useState<{
     [key: string]: boolean;
   }>({});
-  const [clubId] = useState("bucc");
+  const { data: session } = useSession();
+
+  const [clubId, setClubId] = useState("");
 
   const {
     register,
@@ -52,6 +56,11 @@ export default function PageBuilder() {
   });
 
   const watchedValues = watch();
+  useEffect(() => {
+    if (session?.user?.club) {
+      setClubId(session.user.club.toLowerCase());
+    }
+  }, [session]);
 
   useEffect(() => {
     const loadClubData = async () => {

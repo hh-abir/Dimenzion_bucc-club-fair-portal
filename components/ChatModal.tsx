@@ -103,7 +103,6 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         }
       }
 
-      // 🔄 Just set the name; don't start conversation
       const storedName = localStorage.getItem(`chatUserName_${club}`);
       if (storedName) {
         setUserName(storedName);
@@ -124,6 +123,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
       });
 
       const data = await response.json();
+      console.log("Device status response:", data);
       if (data.blocked) {
         setIsBlocked(true);
         setBlockTimeRemaining(data.timeRemaining);
@@ -362,6 +362,7 @@ export default function ChatModal({ club, isOpen, onClose }: ChatModalProps) {
         });
 
         socket.emit("send-private-message", messageData);
+        checkDeviceStatus();
         setNewMessage("");
       } catch (error) {
         console.error("Failed to send message:", error);

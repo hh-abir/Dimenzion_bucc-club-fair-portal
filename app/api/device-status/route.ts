@@ -6,13 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const { fingerprint, club } = await request.json();
-
+    const { fingerprint } = await request.json();
     const block = await DeviceBlock.findOne({
       fingerprint,
-      club,
       blockedUntil: { $gt: new Date() },
     });
+    console.log("Device block check:", block);
 
     if (block) {
       const timeRemaining = Math.ceil(

@@ -60,7 +60,7 @@ export default function PageBuilder() {
     if (session?.user?.club) {
       setClubId(session.user.club.toLowerCase());
     }
-  }, [session]);
+  }, [clubId, session]);
 
   useEffect(() => {
     const loadClubData = async () => {

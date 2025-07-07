@@ -155,7 +155,14 @@ export default function AdminDashboard() {
         );
         const data = await response.json();
         if (Array.isArray(data)) {
-          setMessages(data);
+          if (
+            data.length !== messages.length ||
+            (data.length > 0 &&
+              messages.length > 0 &&
+              data[data.length - 1]._id !== messages[messages.length - 1]._id)
+          ) {
+            setMessages(data);
+          }
         }
       } catch (error) {
         console.error("Failed to refresh messages:", error);
@@ -163,8 +170,7 @@ export default function AdminDashboard() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [selectedConversation]);
-
+  }, [selectedConversation, messages]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

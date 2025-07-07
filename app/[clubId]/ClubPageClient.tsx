@@ -58,10 +58,24 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
       link: "/newsletter/activities-report",
     },
   ];
+  // Place this at the top, before any usage
+  const supportedPlatforms = [
+    "twitter",
+    "facebook",
+    "instagram",
+    "linkedin",
+    "youtube",
+    "github",
+    "website",
+  ];
 
   const socialEntries = Object.entries(club.socialLinks || {}).filter(
     ([url]) => url && url.length > 0
   ) as [keyof typeof club.socialLinks, string][];
+
+  const filteredSocialEntries = socialEntries.filter(([platform]) =>
+    supportedPlatforms.includes(platform.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,9 +111,10 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                 </p>
               )}
               {/* Social Links */}
-              {socialEntries.length > 0 && (
+              {/* Social Links */}
+              {filteredSocialEntries.length > 0 && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-3">
-                  {socialEntries.map(([platform, url]) => {
+                  {filteredSocialEntries.map(([platform, url]) => {
                     const Icon = getSocialIcon(platform);
                     return (
                       <a
@@ -313,7 +328,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
 
         {/* Final CTA Section - Full Width */}
         <section className="text-center mt-20">
-          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-3xl p-12 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-3xl px-8 py-6 md:px-12 md:py-8 text-white relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20"></div>
@@ -322,10 +337,10 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
             </div>
 
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
                 Ready to Join?
               </h2>
-              <p className="text-xl md:text-2xl mb-10 text-blue-100 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-sm md:text-base mb-6 text-blue-100 max-w-2xl mx-auto leading-snug">
                 Take the first step towards an amazing journey with{" "}
                 <span className="font-semibold text-white">
                   {club.clubName}
@@ -335,10 +350,10 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                 href={club.registrationFormLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center space-x-3 bg-white text-blue-600 px-10 py-5 rounded-full text-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105"
+                className="group inline-flex items-center space-x-3 bg-white text-blue-600 px-8 py-3 rounded-full text-base font-semibold hover:bg-gray-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
               >
                 <span>Register Now</span>
-                <ExternalLink className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                <ExternalLink className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
           </div>

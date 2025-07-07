@@ -5,7 +5,7 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Club Chat System",
+  title: "BRAC University CLUB Fair SUMMER 2025",
   description: "Chat with BRAC University clubs",
 };
 

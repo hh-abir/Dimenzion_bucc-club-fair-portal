@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
 import { ArrowRight, Calendar, X } from "lucide-react";
-
-export default function EmbedToggle() {
+interface EmbedToggleProps {
+  shadow?: boolean;
+}
+export default function EmbedToggle({ shadow = false }: EmbedToggleProps) {
   const [showEmbed, setShowEmbed] = useState(false);
 
   return (
     <div>
-      <div className="bg-white rounded-2xl p-6 shadow-xl">
+      <div className={`bg-white rounded-2xl p-6 ${shadow ? "shadow-xl" : ""}`}>
         <button
           onClick={() => setShowEmbed(true)}
           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3 group"

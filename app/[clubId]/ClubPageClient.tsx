@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import ImageCarousel from "@/components/ImageCarousel";
+import Image from "next/image";
+
 import {
   ExternalLink,
   ArrowRight,
@@ -63,7 +65,6 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
     },
   ];
 
-  // Supported platforms for icons
   const supportedPlatforms = [
     "twitter",
     "facebook",
@@ -223,7 +224,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
           {/* Sidebar - 20-30% width */}
           <div className="lg:w-1/4 space-y-6">
             {/* Schedule Button */}
-            <EmbedToggle />
+            <EmbedToggle shadow={true} />
 
             {/* Advertisement Section */}
             <div className="bg-white rounded-2xl p-4 shadow-xl">
@@ -236,9 +237,11 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
                   className="block group"
                 >
                   <div className="aspect-square rounded-xl overflow-hidden">
-                    <img
-                      src="https://scontent.fzyl2-2.fna.fbcdn.net/v/t39.30808-6/515315613_1601477264572319_2541953006725104500_n.png?stp=dst-jpg_tt6&_nc_cat=100&ccb=1-7&_nc_sid=2285d6&_nc_eui2=AeFYUywbEEeuuAB5DwOPp5KTDuf34ZTR3dcO5_fhlNHd178k-g9NhD7uSjbJMRZeZZZcjJlbutIWHH-Bq6Y1qBww&_nc_ohc=N5Qsos2RW3YQ7kNvwFjLebM&_nc_oc=AdmopBSk5ucXvxLlDsjxxCgvxsfclJ-Coizm_u2nJZtCRSxBg4x6kYg81YSJCacliGI&_nc_zt=23&_nc_ht=scontent.fzyl2-2.fna&_nc_gid=H1tUr87M3dwDjpTgmc6LCg&oh=00_AfSCer2ADMkUFGWm3XbHbeCLewLjiE35Lt949NRnW2unHQ&oe=68702327"
+                    <Image
+                      src="https://i.ibb.co/HLXZd2Mz/515315613-1601477264572319-2541953006725104500-n.jpg"
                       alt="Advertisement"
+                      width={600}
+                      height={400}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -288,7 +291,7 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
               </div>
             </div>
 
-            {/* Newsletter Section */}
+            {/* Important Link Section */}
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">

@@ -25,8 +25,10 @@ export default function HomePage() {
     fetchClubs();
   }, []);
 
-  const filteredClubs = clubs.filter((club) =>
-    club.clubName.toLowerCase().includes(search.toLowerCase())
+  const filteredClubs = clubs.filter(
+    (club) =>
+      club.clubName.toLowerCase().includes(search.toLowerCase()) ||
+      club.clubId.toLowerCase().includes(search.toLowerCase())
   );
 
   return (

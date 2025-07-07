@@ -5,12 +5,7 @@ import ReactMarkdown from "react-markdown";
 import ImageCarousel from "@/components/ImageCarousel";
 import Image from "next/image";
 
-import {
-  ExternalLink,
-  ArrowRight,
-  Newspaper,
-  ExternalLinkIcon,
-} from "lucide-react";
+import { ExternalLink, ArrowRight, ExternalLinkIcon } from "lucide-react";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
 import {
@@ -47,21 +42,15 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
       .catch((err) => console.error("Error fetching clubs:", err));
   }, []);
 
-  const newsItems = [
+  const importantLinks = [
     {
-      title: "University Newsletter - July 2025",
-      date: "2025-07-01",
-      link: "/newsletter/july-2025",
+      title: "BUCC Website",
+      link: "https://bracucc.org",
     },
+
     {
-      title: "Campus Weekly Updates",
-      date: "2025-06-28",
-      link: "/newsletter/campus-weekly",
-    },
-    {
-      title: "Student Activities Report",
-      date: "2025-06-25",
-      link: "/newsletter/activities-report",
+      title: "Report Bug",
+      link: club.registrationFormLink,
     },
   ];
 
@@ -294,26 +283,28 @@ export default function ClubPageClient({ club }: ClubPageClientProps) {
             {/* Important Link Section */}
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-lg flex items-center justify-center">
-                  <Newspaper className="h-4 w-4 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <ExternalLink className="h-4 w-4 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Newsletter</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Important Links
+                </h3>
               </div>
-              <div className="space-y-3">
-                {newsItems.map((news, index) => (
-                  <a key={index} href={news.link} className="block group">
-                    <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <h4 className="font-medium text-gray-900 group-hover:text-blue-600 text-sm mb-1">
-                        {news.title}
-                        <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                          Monthly
-                        </span>
-                      </h4>
 
+              <div className="space-y-3">
+                {importantLinks.map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">
-                          {new Date(news.date).toLocaleDateString()}
-                        </span>
+                        <h4 className="font-medium text-gray-900 group-hover:text-blue-600 text-sm">
+                          {item.title}
+                        </h4>
                         <ExternalLinkIcon className="h-3 w-3 text-gray-400 group-hover:text-blue-600 transition-colors" />
                       </div>
                     </div>

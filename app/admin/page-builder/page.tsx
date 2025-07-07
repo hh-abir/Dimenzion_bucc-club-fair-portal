@@ -28,6 +28,7 @@ export default function PageBuilder() {
   const { data: session } = useSession();
 
   const [clubId, setClubId] = useState("");
+  const [formReady, setFormReady] = useState(false);
 
   const {
     register,
@@ -60,9 +61,10 @@ export default function PageBuilder() {
     if (session?.user?.club) {
       setClubId(session.user.club.toLowerCase());
     }
-  }, [clubId, session]);
+  }, [session]);
 
   useEffect(() => {
+    if (!clubId) return; // <--- Only fetch when clubId is set
     const loadClubData = async () => {
       try {
         const response = await fetch(`/api/clubs?clubId=${clubId}`);
@@ -70,6 +72,7 @@ export default function PageBuilder() {
 
         if (data.club) {
           reset(data.club);
+          setFormReady(true);
         } else {
           const defaultClub = {
             clubId: clubId,
@@ -86,6 +89,7 @@ export default function PageBuilder() {
             registrationFormLink: "",
           };
           reset(defaultClub);
+          setFormReady(true); // <--- Also set formReady here!
         }
       } catch (error) {
         console.error("Error loading club data:", error);
@@ -93,10 +97,8 @@ export default function PageBuilder() {
         setIsLoading(false);
       }
     };
-
     loadClubData();
   }, [clubId, reset]);
-
   const uploadToCloudinary = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -309,7 +311,7 @@ export default function PageBuilder() {
     </div>
   );
 
-  if (isLoading) {
+  if (isLoading || !formReady) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -354,7 +356,11 @@ export default function PageBuilder() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            key={clubId}
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
             {/* Hidden Club ID */}
             <input type="hidden" {...register("clubId")} />
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { io, Socket } from "socket.io-client";
 import { Message, Conversation } from "../types";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -285,13 +286,31 @@ export default function AdminDashboard() {
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-full mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div>
+            <div className="flex items-center space-x-2">
+              {/* Back Icon Button with background and border */}
+              <Link href="/admin" passHref>
+                <span
+                  className="inline-flex items-center justify-center p-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:border-blue-400 transition-colors cursor-pointer"
+                  title="Back to Dashboard"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </span>
+              </Link>
               <h1 className="text-2xl font-bold text-gray-900">
-                {session.user!.club} Admin Dashboard
+                {session.user!.club} Chat Portal
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Manage conversations and support requests
-              </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
@@ -321,9 +340,14 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+          {/* Info Paragraph below the heading */}
+          <p className="text-sm text-gray-600 mt-1">
+            ⚠️ Please ensure that all chat conversations are deleted upon
+            completion. For an optimal user experience, we recommend accessing
+            this dashboard on a desktop or laptop computer.
+          </p>
         </div>
       </div>
-
       {/* Main Content - Full height minus header */}
       <div className="flex h-[calc(100vh-88px)]">
         {/* Conversations Sidebar - Fixed width */}
@@ -613,7 +637,6 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
-
       {/* Modals remain the same */}
       {/* Block Device Modal */}
       {showBlockModal && (
@@ -683,7 +706,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

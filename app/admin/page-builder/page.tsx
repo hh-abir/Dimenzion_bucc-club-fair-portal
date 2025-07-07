@@ -235,6 +235,24 @@ export default function PageBuilder() {
         <label className="block text-sm font-medium text-gray-700">
           {label}
         </label>
+        <a
+          href="https://pandao.github.io/editor.md/en.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded hover:bg-blue-100 transition"
+          title="Open Markdown Syntax Guide"
+        >
+          <svg
+            className="w-4 h-4 mr-1 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path d="M13 16h-1v-4h-1m4 4h1V8h-1m-4 8h1V8h-1m-1 8h-1V8h1m8 8h1V8h-1" />
+          </svg>
+          Markdown Link
+        </a>
         <button
           type="button"
           onClick={() =>
@@ -392,7 +410,7 @@ export default function PageBuilder() {
               <MarkdownField
                 fieldName="aboutSection"
                 label="About Section *"
-                placeholder="Write about your club using Markdown..."
+                placeholder="Write about your club using Markdown Link then paste it here"
               />
 
               <div>
@@ -415,13 +433,13 @@ export default function PageBuilder() {
               <MarkdownField
                 fieldName="activitiesSection"
                 label="Activities Section *"
-                placeholder="Describe your club activities using Markdown..."
+                placeholder="Describe your club activities using Markdown Link then paste it here"
               />
 
               <MarkdownField
                 fieldName="whyJoinUsSection"
                 label="Why Join Us Section *"
-                placeholder="Explain why people should join your club using Markdown..."
+                placeholder="Explain why people should join your club using Markdown Link then paste it here"
               />
             </div>
 

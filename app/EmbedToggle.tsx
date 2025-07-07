@@ -56,7 +56,7 @@ export default function EmbedToggle({ shadow = false }: EmbedToggleProps) {
             </button>
             {/* Iframe */}
             <iframe
-              src="https://dimenzion.bracucc.org/" // Replace with your desired URL
+              src="https://dimenzion.vercel.app/"
               title="Embedded Site"
               width="100%"
               height="100%"

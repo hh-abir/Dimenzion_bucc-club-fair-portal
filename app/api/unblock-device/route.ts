@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const { fingerprint, club } = await request.json();
-
     if (!fingerprint || !club) {
       return NextResponse.json(
         { error: "Fingerprint and club are required" },
@@ -24,9 +23,8 @@ export async function POST(request: NextRequest) {
     }
 
     await DeviceBlock.findOneAndUpdate(
-      { fingerprint, club },
-      { blockedUntil: new Date(Date.now() - 1000) },
-      { new: true }
+      { fingerprint },
+      { blockedUntil: new Date(Date.now() - 1000) }
     );
 
     return NextResponse.json({

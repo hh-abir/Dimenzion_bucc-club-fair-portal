@@ -15,13 +15,14 @@ const DeviceBlockSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    blockedBy: {
+    userId: {
       type: String,
-      required: true,
+      required: false,
+      index: true,
     },
-    reason: {
+    username: {
       type: String,
-      default: "Blocked by admin",
+      required: false,
     },
   },
   {

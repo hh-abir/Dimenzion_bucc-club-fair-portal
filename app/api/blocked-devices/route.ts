@@ -14,13 +14,21 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const { fingerprint, club, duration = 30 } = await request.json();
+    const {
+      fingerprint,
+      club,
+      duration = 30,
+      userId,
+      username,
+    } = await request.json();
 
     const blockedUntil = new Date(Date.now() + duration * 60 * 1000);
 
     await DeviceBlock.findOneAndUpdate(
       { fingerprint, club },
       {
+        userId,
+        username,
         fingerprint,
         club,
         blockedUntil,
@@ -54,10 +62,10 @@ export async function GET(request: NextRequest) {
     const club = searchParams.get("club");
 
     if (!club) {
-      return NextResponse.json(
-        { error: "Club parameter required" },
-        { status: 400 }
-      );
+      const allBlockedDevices = await DeviceBlock.find({
+        blockedUntil: { $gt: new Date() },
+      }).sort({ createdAt: -1 });
+      return NextResponse.json(allBlockedDevices);
     }
 
     const blockedDevices = await DeviceBlock.find({

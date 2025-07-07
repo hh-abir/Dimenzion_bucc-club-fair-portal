@@ -27,6 +27,16 @@ export default function AdminDashboard() {
   const blockDevice = async (fingerprint: string) => {
     try {
       setIsBlocking(true);
+
+      // Extract userId and username from the selected conversation
+      const userId = selectedConversation?.userId || "";
+      // If participants is an array, find the user participant
+      const username =
+        selectedConversation?.participants?.find?.((p) => p.type === "user")
+          ?.name ||
+        selectedConversation?.participants[0].name ||
+        "";
+
       const response = await fetch("/api/blocked-devices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,6 +44,8 @@ export default function AdminDashboard() {
           fingerprint,
           club: session?.user?.club,
           duration: blockDuration,
+          userId,
+          username,
         }),
       });
 

@@ -18,14 +18,15 @@ export default function BlockedDevicesManager() {
   const { data: session } = useSession();
   const [blockedDevices, setBlockedDevices] = useState<BlockedDevice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUnblocking, setIsUnblocking] = useState<string | null>(null);
 
   const loadBlockedDevices = useCallback(async () => {
     if (!session?.user?.club) return;
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/blocked-devices`);
+      const response = await fetch(
+        `/api/blocked-devices?club=${session.user.club}`
+      );
       const data = await response.json();
       if (Array.isArray(data)) setBlockedDevices(data);
     } catch (error) {
@@ -34,32 +35,6 @@ export default function BlockedDevicesManager() {
       setIsLoading(false);
     }
   }, [session]);
-
-  const unblockDevice = async (fingerprint: string) => {
-    try {
-      setIsUnblocking(fingerprint);
-      const response = await fetch("/api/unblock-device", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fingerprint,
-          club: session?.user?.club,
-        }),
-      });
-
-      if (response.ok) {
-        setBlockedDevices((prev) =>
-          prev.filter((device) => device.fingerprint !== fingerprint)
-        );
-      } else {
-        console.error("Failed to unblock device");
-      }
-    } catch (error) {
-      console.error("Error unblocking device:", error);
-    } finally {
-      setIsUnblocking(null);
-    }
-  };
 
   const formatTimeRemaining = (blockedUntil: Date) => {
     const now = new Date();
@@ -88,7 +63,8 @@ export default function BlockedDevicesManager() {
           <div>
             <h2 className="text-2xl font-bold">Blocked Devices</h2>
             <p className="text-gray-600">
-              Manage blocked devices for all clubs.
+              View blocked devices for {session!.user!.club}. If you mistakenly
+              blocked a user and want to unblock them, please contact BUCC.
             </p>
           </div>
           <button
@@ -183,55 +159,6 @@ export default function BlockedDevicesManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {device.club}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => unblockDevice(device.fingerprint)}
-                        disabled={isUnblocking === device.fingerprint}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center space-x-1"
-                      >
-                        {isUnblocking === device.fingerprint ? (
-                          <>
-                            <svg
-                              className="animate-spin h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            <span>Unblocking...</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <span>Unblock</span>
-                          </>
-                        )}
-                      </button>
                     </td>
                   </tr>
                 ))}

@@ -4,6 +4,8 @@ import { motion, easeOut } from "framer-motion";
 import HeroSection from "./(components)/HeroSection";
 import SearchBar from "./(components)/SearchBar";
 import ClubCard from "./(components)/ClubCard";
+import Footer from "./(components)/Footer";
+
 import { IClub } from "@/types/club";
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -80,35 +82,41 @@ export default function HomePage() {
   };
 
   return (
-    <main>
-      <HeroSection />
-      <div className="h-16 sm:h-24 md:h-32" />
+    <>
+      <main>
+        <HeroSection />
+        <div className="h-16 sm:h-24 md:h-32" />
 
-      <div id="search-bar" className="container mx-auto px-4 pb-8">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
-        {loading ? (
-          <p className="text-center text-gray-500">Loading clubs...</p>
-        ) : (
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {filteredClubs.length === 0 ? (
-              <p className="col-span-3 text-center text-gray-500">
-                No clubs found.
-              </p>
-            ) : (
-              shuffleArray(filteredClubs).map((club) => (
-                <motion.div key={club._id} variants={cardVariants}>
-                  <ClubCard club={club} />
-                </motion.div>
-              ))
-            )}
-          </motion.div>
-        )}
-      </div>
-    </main>
+        <div id="search-bar" className="container mx-auto px-4 pb-8">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {loading ? (
+            <p className="text-center text-gray-500">Loading clubs...</p>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {filteredClubs.length === 0 ? (
+                <p className="col-span-3 text-center text-gray-500">
+                  No clubs found.
+                </p>
+              ) : (
+                shuffleArray(filteredClubs).map((club) => (
+                  <motion.div key={club._id} variants={cardVariants}>
+                    <ClubCard club={club} />
+                  </motion.div>
+                ))
+              )}
+            </motion.div>
+          )}
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

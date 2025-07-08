@@ -1,12 +1,16 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { motion, easeOut } from "framer-motion";
-import HeroSection from "./(components)/HeroSection";
 import SearchBar from "./(components)/SearchBar";
 import ClubCard from "./(components)/ClubCard";
 import Footer from "./(components)/Footer";
 
 import { IClub } from "@/types/club";
+import dynamic from "next/dynamic";
+const ParallaxHero = dynamic(() => import("./(components)/ParallaxHero"), {
+  ssr: false,
+});
 
 function shuffleArray<T>(array: T[]): T[] {
   return [...array].sort(() => Math.random() - 0.5);
@@ -84,7 +88,7 @@ export default function HomePage() {
   return (
     <>
       <main>
-        <HeroSection />
+        <ParallaxHero />
         <div className="h-16 sm:h-24 md:h-32" />
 
         <div id="search-bar" className="container mx-auto px-4 pb-8">

@@ -23,7 +23,7 @@
 <td align="center">
 <img src="docs/Capture1.PNG" alt="Landing Page" width="100%"/>
 
-<em>Home & Event Dashboard</em>
+<em>HomePage</em>
 
 </td>
 <td align="center">
@@ -37,7 +37,7 @@
 <td align="center">
 <img src="docs/Capture3.PNG" alt="Live Chat System" width="100%"/>
 
-<em>Real-Time Chat Interface</em>
+<em>Details Club Page View</em>
 
 </td>
 <td align="center">
@@ -51,13 +51,13 @@
 <td align="center">
 <img src="docs/Capture5.PNG" alt="Device Security Panel" width="100%"/>
 
-<em>Device & Access Control Panel</em>
+<em>Live Chat System</em>
 
 </td>
 <td align="center">
 <img src="docs/Capture6.PNG" alt="Authentication" width="100%"/>
 
-<em>Secure Authentication Portal</em>
+<em>Device Blocking Feature</em>
 
 </td>
 </tr>
@@ -69,11 +69,9 @@
 
 To explore the different role-based features of the platform, you can log in using the following test accounts connected to our staging database:
 
-| Role                | Email                         | Password          | Access Level                           |
-| ------------------- | ----------------------------- | ----------------- | -------------------------------------- |
-| **System Admin**    | `admin@dimenzion.bracu.ac.bd` | `adminpass2025`   | Full platform control, device blocking |
-| **Club Rep (BUCC)** | `bucc@dimenzion.bracu.ac.bd`  | `clubpass2025`    | Edit BUCC page, answer student chats   |
-| **Student**         | `student@g.bracu.ac.bd`       | `studentpass2025` | View clubs, initiate chats             |
+| Role                | Email                     | Password     | Access Level                         |
+| ------------------- | ------------------------- | ------------ | ------------------------------------ |
+| **Club Rep (BUCC)** | `club.bucc@g.bracu.ac.bd` | `anypass123` | Edit BUCC page, answer student chats |
 
 ---
 
